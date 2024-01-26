@@ -39,6 +39,10 @@ class RenderBlock
         return isset($this->obLevel);
     }
     
+    /**
+     * @return void
+     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     */
     public function start(): void
     {
         $this->outputContext->open();
@@ -49,11 +53,19 @@ class RenderBlock
         return $this->outputContext->isClosed();
     }
     
+    /**
+     * @return string
+     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     */
     public function getOutput(): string
     {
         return $this->replacedByBlock?->getOutput() ?? $this->outputContext->getOutput();
     }
     
+    /**
+     * @return $this
+     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     */
     public function end(): static
     {
         $this->outputContext->close();

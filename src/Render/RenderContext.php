@@ -3,6 +3,7 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
 use Stefmachine\NoTmpl\Exception\RenderException;
 use Throwable;
 
@@ -11,19 +12,7 @@ use Throwable;
  */
 class RenderContext
 {
-    protected static array $globalParameters = [];
-    
-    public static function setGlobal(string $name, mixed $value): void
-    {
-        self::$globalParameters[$name] = $value;
-    }
-    
-    public static function setGlobals(array $values): void
-    {
-        foreach($values as $key => $value) {
-            self::setGlobal($key, $value);
-        }
-    }
+    use ConfigInjectTrait;
     
     /** @var RenderBlock[] */
     protected array $blocks;
@@ -31,13 +20,18 @@ class RenderContext
     
     public function __construct(
         protected RenderContextStack $renderContextStack,
-        protected array              $parameters = [],
+        protected array              $params = [],
     )
     {
         $this->blocks = [];
         $this->outputContext = null;
     }
     
+    /**
+     * @param string $template
+     * @return string
+     * @throws RenderException
+     */
     public function render(string $template): string
     {
         try {
@@ -50,7 +44,7 @@ class RenderContext
             $this->outputContext = new OutputContext("Render {$template}");
             
             $this->outputContext->open();
-            _isolate_render($template, self::mergeParameters($this->parameters));
+            $this->outputFileToBuffer($template, $this->params);
             
             foreach($this->blocks as $block) {
                 if($block->isStarted() && !$block->isEnded()) {
@@ -79,27 +73,45 @@ class RenderContext
                 $this->renderContextStack->popContext();
             }
             
-            throw $ex;
+            /** @noinspection PhpUnhandledExceptionInspection */
+            throw $ex; // Forwarding errors
         }
     }
     
+    /**
+     * @param string $template
+     * @param array|null $parameters
+     * @return string
+     * @throws RenderException
+     */
     public function extend(string $template, array|null $parameters = null): string
     {
         $outputContext = new OutputContext("Extend $template");
         $outputContext->open();
-        _isolate_render($template, self::mergeParameters($parameters ?? $this->parameters));
+        $this->outputFileToBuffer($template, $parameters ?? $this->params);
         return $outputContext->close()->getOutput();
     }
     
+    /**
+     * @param string $template
+     * @param array|null $parameters
+     * @return string
+     * @throws RenderException
+     */
     public function embed(string $template, array|null $parameters = null): string
     {
         $context = new RenderContext(
             RenderContextStack::instance(),
-            $parameters ?? $this->parameters
+            $parameters ?? $this->params
         );
         return $context->render($template);
     }
     
+    /**
+     * @param string $name
+     * @return string
+     * @throws RenderException
+     */
     public function block(string $name): string
     {
         $block = new RenderBlock($name);
@@ -115,6 +127,10 @@ class RenderContext
         return '';
     }
     
+    /**
+     * @return string
+     * @throws RenderException
+     */
     public function endBlock(): string
     {
         foreach(array_reverse($this->blocks) as $block) {
@@ -132,34 +148,35 @@ class RenderContext
         return '';
     }
     
-    private static function mergeParameters(array $parameters = []): array
+    /**
+     * @param string $file
+     * @param array $params
+     * @return void
+     * @throws RenderException
+     */
+    protected function outputFileToBuffer(string $file, array $params = []): void
     {
-        return array_merge(
-            self::$globalParameters,
-            $parameters,
-        );
+        $file = func_get_arg(0);
+        if(!file_exists(func_get_arg(0))) {
+            throw new RenderException("File '{$file}' not found for rendering.");
+        }
+        
+        if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+            _isolate_php_render($file, array_merge($this->getConfig()->getRenderGlobalParams(), $params));
+            return;
+        }
+        
+        echo file_get_contents($file);
     }
 }
 
 /**
- * @param string $template
+ * @param string $file
  * @param array $params
  * @return void
- *
- * @internal
  */
-function _isolate_render(): void
+function _isolate_php_render(): void
 {
     extract(func_get_arg(1));
-    $file = func_get_arg(0);
-    if(!file_exists($file)) {
-        throw new RenderException("File '{$file}' not found for rendering.");
-    }
-    
-    if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-        require $file;
-        return;
-    }
-    
-    echo file_get_contents($file);
+    require func_get_arg(0);
 }

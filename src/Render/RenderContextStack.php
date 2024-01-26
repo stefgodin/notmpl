@@ -4,25 +4,21 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Exception\RenderException;
+use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
 /**
  * @internal
  */
 class RenderContextStack
 {
+    use SingletonTrait;
+    
     /** @var RenderContext[] */
     protected array $stack;
     
     public function __construct()
     {
         $this->stack = [];
-    }
-    
-    protected static RenderContextStack $instance;
-    
-    public static function instance(): RenderContextStack
-    {
-        return self::$instance ??= new RenderContextStack();
     }
     
     public function pushContext(RenderContext $context): int

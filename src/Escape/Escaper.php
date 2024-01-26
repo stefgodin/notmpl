@@ -4,37 +4,29 @@
 namespace Stefmachine\NoTmpl\Escape;
 
 use Laminas\Escaper\Escaper as LaminasEscaper;
-use Laminas\Escaper\Exception\ExceptionInterface;
+use Laminas\Escaper\Exception\ExceptionInterface as LaminasExceptionInterface;
+use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
 use Stefmachine\NoTmpl\Exception\EscapeException;
+use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 use Stringable;
 
 class Escaper
 {
-    protected static string|null $encoding = null;
-    protected static LaminasEscaper|null $instance = null;
+    use SingletonTrait;
+    use ConfigInjectTrait;
+    
+    protected LaminasEscaper $escaper;
+    
+    private function __construct() {}
     
     /**
      * @return LaminasEscaper
-     * @throws ExceptionInterface
+     * @throws LaminasExceptionInterface
      */
-    private static function instance(): LaminasEscaper
+    private function getEscaper(): LaminasEscaper
     {
-        return self::$instance ??= new LaminasEscaper(self::$encoding);
+        return $this->escaper ??= new LaminasEscaper($this->getConfig()->getEscaperEncoding());
     }
-    
-    public static function setEncoding(string|null $_encoding): void
-    {
-        try {
-            self::$encoding = $_encoding;
-            if(self::instance()->getEncoding() !== $_encoding) {
-                self::$instance = null;
-            }
-        } catch(ExceptionInterface $ex) {
-            throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
-        }
-    }
-    
-    private function __construct() {}
     
     private static function stringify(mixed $value): string
     {
@@ -45,47 +37,72 @@ class Escaper
         return $value;
     }
     
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws EscapeException
+     */
     public static function html(mixed $value): string
     {
         try {
-            return self::instance()->escapeHtml(self::stringify($value));
-        } catch(ExceptionInterface $ex) {
+            return self::instance()->getEscaper()->escapeHtml(self::stringify($value));
+        } catch(LaminasExceptionInterface $ex) {
             throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
         }
     }
     
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws EscapeException
+     */
     public static function htmlAttr(mixed $value): string
     {
         try {
-            return self::instance()->escapeHtmlAttr(self::stringify($value));
-        } catch(ExceptionInterface $ex) {
+            return self::instance()->getEscaper()->escapeHtmlAttr(self::stringify($value));
+        } catch(LaminasExceptionInterface $ex) {
             throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
         }
     }
     
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws EscapeException
+     */
     public static function js(mixed $value): string
     {
         try {
-            return self::instance()->escapeJs(self::stringify($value));
-        } catch(ExceptionInterface $ex) {
+            return self::instance()->getEscaper()->escapeJs(self::stringify($value));
+        } catch(LaminasExceptionInterface $ex) {
             throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
         }
     }
     
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws EscapeException
+     */
     public static function css(mixed $value): string
     {
         try {
-            return self::instance()->escapeCss(self::stringify($value));
-        } catch(ExceptionInterface $ex) {
+            return self::instance()->getEscaper()->escapeCss(self::stringify($value));
+        } catch(LaminasExceptionInterface $ex) {
             throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
         }
     }
     
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws EscapeException
+     */
     public static function url(mixed $value): string
     {
         try {
-            return self::instance()->escapeUrl(self::stringify($value));
-        } catch(ExceptionInterface $ex) {
+            return self::instance()->getEscaper()->escapeUrl(self::stringify($value));
+        } catch(LaminasExceptionInterface $ex) {
             throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
         }
     }
