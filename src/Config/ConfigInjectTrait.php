@@ -5,7 +5,7 @@ namespace Stefmachine\NoTmpl\Config;
 
 trait ConfigInjectTrait
 {
-    protected function getConfig(): Config
+    private function getConfig(): Config
     {
         return Config::instance();
     }

@@ -5,7 +5,7 @@ namespace Stefmachine\NoTmpl\Singleton;
 
 trait SingletonTrait
 {
-    protected static self|null $instance;
+    private static self|null $instance;
     
     public static function instance(): static
     {

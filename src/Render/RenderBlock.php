@@ -10,14 +10,14 @@ use Stefmachine\NoTmpl\Exception\RenderException;
  */
 class RenderBlock
 {
-    protected string $id;
-    protected OutputContext $outputContext;
+    private string $id;
+    private OutputContext $outputContext;
     
-    protected RenderBlock|null $replacedByBlock;
-    protected RenderBlock|null $replacingBlock;
+    private RenderBlock|null $replacedByBlock;
+    private RenderBlock|null $replacingBlock;
     
     public function __construct(
-        protected string $name,
+        private string $name,
     )
     {
         $this->id = uniqid("{$name}_");

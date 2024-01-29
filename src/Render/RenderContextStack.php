@@ -14,7 +14,7 @@ class RenderContextStack
     use SingletonTrait;
     
     /** @var RenderContext[] */
-    protected array $stack;
+    private array $stack;
     
     public function __construct()
     {

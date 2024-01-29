@@ -10,11 +10,11 @@ use Stefmachine\NoTmpl\Exception\RenderException;
  */
 class OutputContext
 {
-    protected string|null $output;
-    protected int|null $level;
+    private string|null $output;
+    private int|null $level;
     
     public function __construct(
-        protected string $name,
+        private string $name,
     )
     {
         $this->output = null;
@@ -150,22 +150,11 @@ class OutputContext
         }
         
         if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-            self::includeIsolatedPhp($file, $vars);
+            IsolatedPhpRenderer::render($file, $vars);
         } else {
             $this->writeContent(file_get_contents($file));
         }
         
         return $this;
-    }
-    
-    /**
-     * @param string $file
-     * @param array $params
-     * @return void
-     */
-    private static function includeIsolatedPhp(): void
-    {
-        extract(func_get_arg(1));
-        require func_get_arg(0);
     }
 }

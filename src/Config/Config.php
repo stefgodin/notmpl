@@ -3,16 +3,16 @@
 
 namespace Stefmachine\NoTmpl\Config;
 
-use Stefmachine\NoTmpl\Escape\Escaper;
+use Stefmachine\NoTmpl\Escape\Esc;
 use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
 class Config
 {
     use SingletonTrait;
     
-    protected array $renderGlobalParams;
-    protected array $templateDirectories;
-    protected string|null $escaperEncoding;
+    private array $renderGlobalParams;
+    private array $templateDirectories;
+    private string|null $escaperEncoding;
     
     public function __construct()
     {
@@ -79,7 +79,7 @@ class Config
     public function setEscaperEncoding(string|null $_encoding): static
     {
         $this->escaperEncoding = $_encoding;
-        Escaper::resetInstance();
+        Esc::resetInstance();
         return $this;
     }
     

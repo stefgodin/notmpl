@@ -15,12 +15,12 @@ class RenderContext
     use ConfigInjectTrait;
     
     /** @var RenderBlock[] */
-    protected array $blocks;
-    protected OutputContext $outputContext;
+    private array $blocks;
+    private OutputContext $outputContext;
     
     public function __construct(
-        protected RenderContextStack $renderContextStack,
-        protected array              $params = [],
+        private RenderContextStack $renderContextStack,
+        private array              $params = [],
     )
     {
         $this->blocks = [];
@@ -95,7 +95,7 @@ class RenderContext
         $this->outputContext->writeContent($extendedContent);
     }
     
-    protected function findTemplateFile(string $template): string
+    private function findTemplateFile(string $template): string
     {
         if(file_exists($template)) {
             return $template;
