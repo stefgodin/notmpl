@@ -4,7 +4,7 @@
 namespace Stefmachine\NoTmpl\Escape;
 
 /**
- * Proxies the {@see \Laminas\Escaper\Escaper::escapeHtml()} and stringifies mixed value
+ * Proxies {@see Esc::html}
  *
  * @param mixed $value
  * @return string
@@ -16,7 +16,7 @@ function esc_html(mixed $value): string
 }
 
 /**
- * Proxies the {@see \Laminas\Escaper\Escaper::escapeHtmlAttr()} and stringifies mixed value
+ * Proxies {@see Esc::htmlAttr}
  *
  * @param mixed $value
  * @return string
@@ -28,7 +28,7 @@ function esc_html_attr(mixed $value): string
 }
 
 /**
- * Proxies the {@see \Laminas\Escaper\Escaper::escapeJs()} and stringifies mixed value
+ * Proxies {@see Esc::js}
  *
  * @param mixed $value
  * @return string
@@ -40,7 +40,7 @@ function esc_js(mixed $value): string
 }
 
 /**
- * Proxies the {@see \Laminas\Escaper\Escaper::escapeCss()} and stringifies mixed value
+ * Proxies {@see Esc::css}
  *
  * @param mixed $value
  * @return string

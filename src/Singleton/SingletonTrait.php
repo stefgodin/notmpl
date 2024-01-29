@@ -3,6 +3,9 @@
 
 namespace Stefmachine\NoTmpl\Singleton;
 
+/**
+ * @internal
+ */
 trait SingletonTrait
 {
     private static self|null $instance;

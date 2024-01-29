@@ -4,7 +4,7 @@
 namespace Stefmachine\NoTmpl\Render;
 
 /**
- * Renders a template content with given parameters as variables and returns the resulting rendered content as a string.
+ * Proxies {@see NoTmpl::render()}
  *
  * @param string $template - The template to render
  * @param array $parameters
@@ -13,16 +13,11 @@ namespace Stefmachine\NoTmpl\Render;
  */
 function render(string $template, array $parameters = []): string
 {
-    $context = new RenderContext(
-        RenderContextStack::instance(),
-        $parameters
-    );
-    return $context->render($template);
+    return NoTmpl::render($template, $parameters);
 }
 
 /**
- * Starts a new separate render context to embed a template into the current render context.
- * Blocks of the sub template are not shared and cannot be extended.
+ * Proxies {@see NoTmpl::embed()}
  *
  * @param string $template
  * @param array|null $parameters
@@ -31,12 +26,11 @@ function render(string $template, array $parameters = []): string
  */
 function embed(string $template, array|null $parameters = null): void
 {
-    RenderContextStack::instance()->getCurrentContext()->embed($template, $parameters);
+    NoTmpl::embed($template, $parameters);
 }
 
 /**
- * Starts a render context within the current render context.
- * Blocks of the extended template are shared and can be extended.
+ * Proxies {@see NoTmpl::extend()}
  *
  * @param string $template - The extended template to render
  * @param array|null $parameters - Specified parameters or the parameters of the current context
@@ -45,12 +39,11 @@ function embed(string $template, array|null $parameters = null): void
  */
 function extend(string $template, array|null $parameters = null): void
 {
-    RenderContextStack::instance()->getCurrentContext()->extend($template, $parameters);
+    NoTmpl::extend($template, $parameters);
 }
 
 /**
- * Starts the context of a block to allow replacement of the block content on demand.
- * If a block with the same name already exists, it replaces the content of the existing block with this one.
+ * Proxies {@see NoTmpl::block()}
  *
  * @param string $name
  * @return void
@@ -58,27 +51,27 @@ function extend(string $template, array|null $parameters = null): void
  */
 function block(string $name): void
 {
-    RenderContextStack::instance()->getCurrentContext()->startBlock($name);
+    NoTmpl::block($name);
 }
 
 /**
- * Renders the content of the parent block
+ * Proxies {@see NoTmpl::parentBlock()}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
 function parent_block(): void
 {
-    RenderContextStack::instance()->getCurrentContext()->renderParentBlock();
+    NoTmpl::parentBlock();
 }
 
 /**
- * Ends the context of the last declared block.
+ * Proxies {@see NoTmpl::endBlock()}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
 function end_block(): void
 {
-    RenderContextStack::instance()->getCurrentContext()->endBlock();
+    NoTmpl::endBlock();
 }

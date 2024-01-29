@@ -10,6 +10,9 @@ use Stefmachine\NoTmpl\Exception\EscapeException;
 use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 use Stringable;
 
+/**
+ * Escape class that proxies and regroups the {@see LaminasEscaper} methods
+ */
 class Esc
 {
     use SingletonTrait;
@@ -38,6 +41,8 @@ class Esc
     }
     
     /**
+     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeHtml}
+     *
      * @param mixed $value
      * @return string
      * @throws EscapeException
@@ -52,6 +57,8 @@ class Esc
     }
     
     /**
+     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeHtmlAttr}
+     *
      * @param mixed $value
      * @return string
      * @throws EscapeException
@@ -66,6 +73,8 @@ class Esc
     }
     
     /**
+     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeJs}
+     *
      * @param mixed $value
      * @return string
      * @throws EscapeException
@@ -80,6 +89,8 @@ class Esc
     }
     
     /**
+     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeCss}
+     *
      * @param mixed $value
      * @return string
      * @throws EscapeException
