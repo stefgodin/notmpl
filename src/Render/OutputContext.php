@@ -21,6 +21,17 @@ class OutputContext
         $this->level = null;
     }
     
+    public function setName(string $_name): static
+    {
+        $this->name = $_name;
+        return $this;
+    }
+    
+    public static function create(string $name): OutputContext
+    {
+        return new OutputContext($name);
+    }
+    
     /**
      * @return $this
      * @throws RenderException
@@ -105,5 +116,56 @@ class OutputContext
         }
         
         return $this->output;
+    }
+    
+    /**
+     * @param string $content
+     * @return $this
+     * @throws RenderException
+     */
+    public function writeContent(string $content): static
+    {
+        if(!$this->isOpen()) {
+            throw new RenderException("Cannot write content into closed output context '{$this->name}'.");
+        }
+        
+        echo $content;
+        return $this;
+    }
+    
+    /**
+     * @param string $file
+     * @param array $vars
+     * @return $this
+     * @throws RenderException
+     */
+    public function includeFile(string $file, array $vars = []): static
+    {
+        if(!$this->isOpen()) {
+            throw new RenderException("Cannot include file into closed output context '{$this->name}'.");
+        }
+        
+        if(!file_exists($file)) {
+            throw new RenderException("File '{$file}' not found for rendering.");
+        }
+        
+        if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+            self::includeIsolatedPhp($file, $vars);
+        } else {
+            $this->writeContent(file_get_contents($file));
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * @param string $file
+     * @param array $params
+     * @return void
+     */
+    private static function includeIsolatedPhp(): void
+    {
+        extract(func_get_arg(1));
+        require func_get_arg(0);
     }
 }

@@ -16,7 +16,7 @@ class RenderContext
     
     /** @var RenderBlock[] */
     protected array $blocks;
-    protected OutputContext|null $outputContext;
+    protected OutputContext $outputContext;
     
     public function __construct(
         protected RenderContextStack $renderContextStack,
@@ -24,7 +24,7 @@ class RenderContext
     )
     {
         $this->blocks = [];
-        $this->outputContext = null;
+        $this->outputContext = OutputContext::create("Render unknown");
     }
     
     /**
@@ -37,22 +37,18 @@ class RenderContext
         try {
             $this->renderContextStack->pushContext($this);
             
-            if($this->outputContext !== null) {
-                throw new RenderException("Rendering context of '{$template}' already rendered.");
+            $template = $this->findTemplateFile($template);
+            if($this->outputContext->wasOpened()) {
+                throw new RenderException("Rendering context of '{$template}' already rendering/rendered.");
             }
             
-            $this->outputContext = new OutputContext("Render {$template}");
+            $this->outputContext
+                ->setName("Render {$template}")
+                ->open()
+                ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $this->params))
+                ->close();
             
-            $this->outputContext->open();
-            $this->outputFileToBuffer($template, $this->params);
-            
-            foreach($this->blocks as $block) {
-                if($block->isStarted() && !$block->isEnded()) {
-                    throw new RenderException("Rendering context of '{$template}' has non-ended block '{$block->getName()}'.");
-                }
-            }
-            
-            $output = $this->outputContext->close()->getOutput();
+            $output = $this->outputContext->getOutput();
             for($outputChanged = true; $outputChanged; $outputChanged = false) {
                 foreach($this->blocks as $block) {
                     $newOutput = str_replace($block->getMarkup(), $block->getOutput(), $output);
@@ -81,42 +77,80 @@ class RenderContext
     /**
      * @param string $template
      * @param array|null $parameters
-     * @return string
+     * @return void
      * @throws RenderException
      */
-    public function extend(string $template, array|null $parameters = null): string
+    public function extend(string $template, array|null $parameters = null): void
     {
-        $outputContext = new OutputContext("Extend $template");
-        $outputContext->open();
-        $this->outputFileToBuffer($template, $parameters ?? $this->params);
-        return $outputContext->close()->getOutput();
+        if(!$this->outputContext->isOpen()) {
+            throw new RenderException("Cannot extend closed render context.");
+        }
+        
+        $template = $this->findTemplateFile($template);
+        $extendedContent = OutputContext::create("Extend {$template}")
+            ->open()
+            ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $parameters ?? $this->params))
+            ->close()
+            ->getOutput();
+        $this->outputContext->writeContent($extendedContent);
+    }
+    
+    protected function findTemplateFile(string $template): string
+    {
+        if(file_exists($template)) {
+            return $template;
+        }
+        
+        $checkedPaths = ['"' . $template . '"'];
+        foreach($this->getConfig()->getTemplateDirectories() as $dir) {
+            $file = $dir . DIRECTORY_SEPARATOR . $template;
+            if(file_exists($file)) {
+                return $file;
+            }
+            $checkedPaths[] = '"' . $file . '"';
+        }
+        
+        throw new RenderException(sprintf("Could not find template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)));
     }
     
     /**
      * @param string $template
      * @param array|null $parameters
-     * @return string
+     * @return void
      * @throws RenderException
      */
-    public function embed(string $template, array|null $parameters = null): string
+    public function embed(string $template, array|null $parameters = null): void
     {
+        if(!$this->outputContext->isOpen()) {
+            throw new RenderException("Cannot embed into a closed render context.");
+        }
+        
         $context = new RenderContext(
             RenderContextStack::instance(),
             $parameters ?? $this->params
         );
-        return $context->render($template);
+        $embedContent = $context->render($template);
+        $this->outputContext->writeContent($embedContent);
     }
     
     /**
      * @param string $name
-     * @return string
+     * @return void
      * @throws RenderException
      */
-    public function block(string $name): string
+    public function startBlock(string $name): void
     {
+        if(!$this->outputContext->isOpen()) {
+            throw new RenderException("Cannot add block into a closed render context.");
+        }
+        
         $block = new RenderBlock($name);
         foreach($this->blocks as $oldBlock) {
             if($oldBlock->getName() === $name) {
+                if(!$oldBlock->isEnded()) {
+                    throw new RenderException("Cannot extend non-ended block '{$name}'.");
+                }
+                
                 $oldBlock->replaceWith($block);
                 break;
             }
@@ -124,59 +158,55 @@ class RenderContext
         
         $this->blocks[] = $block;
         $block->start();
-        return '';
     }
     
     /**
-     * @return string
+     * @return void
      * @throws RenderException
      */
-    public function endBlock(): string
+    public function renderParentBlock(): void
     {
+        if(!$this->outputContext->isOpen()) {
+            throw new RenderException("Cannot render parent block into a closed render context.");
+        }
+        
+        foreach(array_reverse($this->blocks) as $block) {
+            if(!$block->isEnded()) {
+                
+                if(!$block->isReplacing()) {
+                    throw new RenderException("Block '{$block->getName()}' is not extending a parent block.");
+                }
+                
+                $this->outputContext->writeContent($block->getParentOutput());
+                return;
+            }
+        }
+        
+        throw new RenderException("There is no parent block to render.");
+    }
+    
+    /**
+     * @return void
+     * @throws RenderException
+     */
+    public function endBlock(): void
+    {
+        if(!$this->outputContext->isOpen()) {
+            throw new RenderException("Cannot end block from a closed render context.");
+        }
+        
         foreach(array_reverse($this->blocks) as $block) {
             if(!$block->isEnded()) {
                 $block->end();
                 
                 if(!$block->isReplacing()) {
-                    return $block->getMarkup();
+                    $this->outputContext->writeContent($block->getMarkup());
                 }
                 
-                return '';
+                return;
             }
         }
         
-        return '';
+        throw new RenderException("There are no more blocks to end.");
     }
-    
-    /**
-     * @param string $file
-     * @param array $params
-     * @return void
-     * @throws RenderException
-     */
-    protected function outputFileToBuffer(string $file, array $params = []): void
-    {
-        $file = func_get_arg(0);
-        if(!file_exists(func_get_arg(0))) {
-            throw new RenderException("File '{$file}' not found for rendering.");
-        }
-        
-        if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-            _isolate_php_render($file, array_merge($this->getConfig()->getRenderGlobalParams(), $params));
-            return;
-        }
-        
-        echo file_get_contents($file);
-    }
-}
-
-/**
- * @param string $file
- * @param array $params
- * @return void
- */
-function _isolate_php_render(): void
-{
-    extract(func_get_arg(1));
-    require func_get_arg(0);
 }

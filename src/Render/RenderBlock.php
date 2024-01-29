@@ -3,6 +3,8 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Exception\RenderException;
+
 /**
  * @internal
  */
@@ -21,7 +23,7 @@ class RenderBlock
         $this->id = uniqid("{$name}_");
         $this->replacedByBlock = null;
         $this->replacingBlock = null;
-        $this->outputContext = new OutputContext("Block {$this->name} {$this->getMarkup()}");
+        $this->outputContext = OutputContext::create("Block {$this->name} {$this->getMarkup()}");
     }
     
     public function getMarkup(): string
@@ -40,12 +42,13 @@ class RenderBlock
     }
     
     /**
-     * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @return $this
+     * @throws RenderException
      */
-    public function start(): void
+    public function start(): static
     {
         $this->outputContext->open();
+        return $this;
     }
     
     public function isEnded(): bool
@@ -55,7 +58,7 @@ class RenderBlock
     
     /**
      * @return string
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      */
     public function getOutput(): string
     {
@@ -63,8 +66,17 @@ class RenderBlock
     }
     
     /**
+     * @return string
+     * @throws RenderException
+     */
+    public function getParentOutput(): string
+    {
+        return $this->isReplacing() ? $this->replacingBlock->getParentOutput() : $this->outputContext->getOutput();
+    }
+    
+    /**
      * @return $this
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      */
     public function end(): static
     {
@@ -72,8 +84,17 @@ class RenderBlock
         return $this;
     }
     
+    /**
+     * @param RenderBlock $block
+     * @return $this
+     * @throws RenderException
+     */
     public function replaceWith(RenderBlock $block): static
     {
+        if($block === $this) {
+            throw new RenderException("Cannot replace block '{$block->name}' by itself.");
+        }
+        
         $this->replacedByBlock = $block;
         $block->replacingBlock = $this;
         return $this;
