@@ -8,9 +8,9 @@ use Stefmachine\NoTmpl\Exception\RenderException;
 /**
  * @internal
  */
-class OutputContext
+class OutputBuffer
 {
-    /** @var OutputContext[] */
+    /** @var OutputBuffer[] */
     private static array $stack = [];
     
     private static function getCurrentContextName(): string
@@ -34,9 +34,9 @@ class OutputContext
         return $this->name;
     }
     
-    public static function create(string $name): OutputContext
+    public static function create(string $name): OutputBuffer
     {
-        return new OutputContext($name);
+        return new OutputBuffer($name);
     }
     
     /**
@@ -46,7 +46,7 @@ class OutputContext
     public function open(): static
     {
         if($this->isOpen()) {
-            throw new RenderException("The output context '{$this->name}' is already opened.");
+            throw new RenderException("The output buffer '{$this->name}' is already opened.");
         }
         
         ob_start(function(string $buffer) {
@@ -81,16 +81,16 @@ class OutputContext
     public function close(): static
     {
         if($this->isClosed()) {
-            throw new RenderException("The output context '{$this->name}' is already closed.");
+            throw new RenderException("The output buffer '{$this->name}' is already closed.");
         }
         
         if(!$this->wasOpened()) {
-            throw new RenderException("The output context '{$this->name}' cannot be closed because it was never opened in the first place.");
+            throw new RenderException("The output buffer '{$this->name}' cannot be closed because it was never opened in the first place.");
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentContextName();
-            throw new RenderException("The output context '{$this->name}' cannot be closed before non-closed output context '{$higherContextName}'.");
+            throw new RenderException("The output buffer '{$this->name}' cannot be closed before non-closed output buffer '{$higherContextName}'.");
         }
         
         ob_end_clean();
@@ -106,7 +106,7 @@ class OutputContext
         while($this->level !== null && ob_get_level() >= $this->level && ob_get_level() > 0) {
             if(ob_end_clean() === false && ob_end_flush() === false) {
                 $higherContextName = self::getCurrentContextName();
-                throw new RenderException("Failing to forcefully close output context '{$this->name}' because '{$higherContextName}' context prevents closing.");
+                throw new RenderException("Failing to forcefully close output buffer '{$this->name}' because '{$higherContextName}' context prevents closing.");
             }
         }
         return $this;
@@ -124,7 +124,7 @@ class OutputContext
     public function getOutput(): string
     {
         if(!$this->isClosed()) {
-            throw new RenderException("Cannot get output from output context '{$this->name}' since it was never closed.");
+            throw new RenderException("Cannot get output from output buffer '{$this->name}' since it was never closed.");
         }
         
         return $this->output;
@@ -138,12 +138,12 @@ class OutputContext
     public function writeContent(string $content): static
     {
         if(!$this->isOpen()) {
-            throw new RenderException("Cannot write content into closed output context '{$this->name}'.");
+            throw new RenderException("Cannot write content into closed output buffer '{$this->name}'.");
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentContextName();
-            throw new RenderException("Cannot write content into output context '{$this->name}' when other higher context '{$higherContextName}' is still open.");
+            throw new RenderException("Cannot write content into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
         }
         
         echo $content;
@@ -159,12 +159,12 @@ class OutputContext
     public function includeFile(string $file, array $vars = []): static
     {
         if(!$this->isOpen()) {
-            throw new RenderException("Cannot include file into closed output context '{$this->name}'.");
+            throw new RenderException("Cannot include file into closed output buffer '{$this->name}'.");
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentContextName();
-            throw new RenderException("Cannot include file into output context '{$this->name}' when other higher context '{$higherContextName}' is still open.");
+            throw new RenderException("Cannot include file into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
         }
         
         if(!file_exists($file)) {

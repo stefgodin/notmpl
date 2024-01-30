@@ -24,7 +24,7 @@ class NoTmpl
      * Renders a template content with given parameters as variables and returns the resulting rendered content as a string.
      *
      * @param string $template - The template to render
-     * @param array $parameters
+     * @param array $parameters - The parameters to be passed to the template
      * @return string
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
@@ -39,64 +39,64 @@ class NoTmpl
     
     /**
      * Starts a new separate render context to embed a template into the current render context.
-     * Blocks of the sub template are not shared and cannot be extended.
+     * Slots of the sub template are not shared and cannot be extended.
      *
-     * @param string $template
-     * @param array|null $parameters
+     * @param string $template - The embedded template to render
+     * @param array $parameters - Specified additional parameters
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function embed(string $template, array|null $parameters = null): void
+    public static function embed(string $template, array $parameters = []): void
     {
         RenderContextStack::instance()->getCurrentContext()->embed($template, $parameters);
     }
     
     /**
      * Starts a render context within the current render context.
-     * Blocks of the merged template are shared and can be overwritten.
+     * Slots of the merged template are shared and can be overwritten.
      *
      * @param string $template - The merged template to render
-     * @param array|null $parameters - Specified parameters or the parameters of the current context
+     * @param array $parameters - Specified additional parameters
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function merge(string $template, array|null $parameters = null): void
+    public static function merge(string $template, array $parameters = []): void
     {
         RenderContextStack::instance()->getCurrentContext()->merge($template, $parameters);
     }
     
     /**
-     * Starts the context of a block to allow replacement of the block content on demand.
-     * If a block with the same name already exists, it replaces the content of the existing block with this one.
+     * Starts the context of a slot to allow replacement of the slot content on demand.
+     * If a slot with the same name already exists, it replaces the content of the existing slot with this one.
      *
      * @param string $name
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function block(string $name): void
+    public static function slot(string $name): void
     {
-        RenderContextStack::instance()->getCurrentContext()->startBlock($name);
+        RenderContextStack::instance()->getCurrentContext()->startSlot($name);
     }
     
     /**
-     * Renders the content of the parent block
+     * Renders the content of the parent slot
      *
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function parentBlock(): void
+    public static function parentSlot(): void
     {
-        RenderContextStack::instance()->getCurrentContext()->renderParentBlock();
+        RenderContextStack::instance()->getCurrentContext()->renderParentSlot();
     }
     
     /**
-     * Ends the context of the last declared block.
+     * Ends the context of the last declared slot.
      *
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function endBlock(): void
+    public static function endSlot(): void
     {
-        RenderContextStack::instance()->getCurrentContext()->endBlock();
+        RenderContextStack::instance()->getCurrentContext()->endSlot();
     }
 }

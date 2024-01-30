@@ -7,7 +7,7 @@ namespace Stefmachine\NoTmpl\Render;
  * Proxies {@see NoTmpl::render()}
  *
  * @param string $template - The template to render
- * @param array $parameters
+ * @param array $parameters - The parameters to be passed to the template
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
@@ -19,12 +19,12 @@ function render(string $template, array $parameters = []): string
 /**
  * Proxies {@see NoTmpl::embed()}
  *
- * @param string $template
- * @param array|null $parameters
+ * @param string $template - The embedded template to render
+ * @param array $parameters - Specified additional parameters
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function embed(string $template, array|null $parameters = null): void
+function embed(string $template, array $parameters = []): void
 {
     NoTmpl::embed($template, $parameters);
 }
@@ -33,45 +33,45 @@ function embed(string $template, array|null $parameters = null): void
  * Proxies {@see NoTmpl::merge()}
  *
  * @param string $template - The merged template to render
- * @param array|null $parameters - Specified parameters or the parameters of the current context
+ * @param array $parameters - Specified additional parameters
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function merge(string $template, array|null $parameters = null): void
+function merge(string $template, array $parameters = []): void
 {
     NoTmpl::merge($template, $parameters);
 }
 
 /**
- * Proxies {@see NoTmpl::block()}
+ * Proxies {@see NoTmpl::slot()}
  *
- * @param string $name
+ * @param string $name - The slot name
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function block(string $name): void
+function slot(string $name): void
 {
-    NoTmpl::block($name);
+    NoTmpl::slot($name);
 }
 
 /**
- * Proxies {@see NoTmpl::parentBlock()}
+ * Proxies {@see NoTmpl::parentSlot()}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function parent_block(): void
+function parent_slot(): void
 {
-    NoTmpl::parentBlock();
+    NoTmpl::parentSlot();
 }
 
 /**
- * Proxies {@see NoTmpl::endBlock()}
+ * Proxies {@see NoTmpl::endSlot()}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function end_block(): void
+function end_slot(): void
 {
-    NoTmpl::endBlock();
+    NoTmpl::endSlot();
 }

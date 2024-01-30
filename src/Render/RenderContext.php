@@ -14,17 +14,17 @@ class RenderContext
 {
     use ConfigInjectTrait;
     
-    /** @var RenderBlock[] */
-    private array $blocks;
-    private OutputContextStack $outputContextStack;
+    /** @var Slot[] */
+    private array $slots;
+    private OutputBufferStack $obStack;
     
     public function __construct(
         private RenderContextStack $renderContextStack,
         private array              $params = [],
     )
     {
-        $this->blocks = [];
-        $this->outputContextStack = new OutputContextStack();
+        $this->slots = [];
+        $this->obStack = new OutputBufferStack();
     }
     
     /**
@@ -34,43 +34,44 @@ class RenderContext
      */
     public function render(string $template): string
     {
-        if($this->outputContextStack->hasContext()) {
-            throw new RenderException("Render context is already rendering '{$this->outputContextStack->getMainContext()->getName()}'.");
+        if($this->obStack->hasBuffer()) {
+            throw new RenderException("Render context is already rendering '{$this->obStack->getMain()->getName()}'.");
         }
         
         try {
             $template = $this->findTemplateFile($template);
             
             $this->renderContextStack->pushContext($this);
-            $oc = $this->outputContextStack
-                ->pushContext(OutputContext::create("Render '{$template}'"))
-                ->getMainContext();
+            $oc = $this->obStack
+                ->push(OutputBuffer::create("Render '{$template}'"))
+                ->getMain();
             $oc->open()
                 ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $this->params))
                 ->close();
             
             $output = $oc->getOutput();
+            
             for($outputChanged = true; $outputChanged; $outputChanged = false) {
-                foreach($this->blocks as $block) {
-                    $newOutput = str_replace($block->getMarkup(), $block->getOutput(), $output);
+                foreach($this->slots as $slot) {
+                    $newOutput = str_replace($slot->getMarkup(), $slot->getOutput(), $output);
                     $outputChanged = $outputChanged || $newOutput !== $output;
                     $output = $newOutput;
                 }
             }
             
-            $this->outputContextStack->popContext();
+            $this->obStack->pop();
             $this->renderContextStack->popContext();
             
             return $output;
         } catch(Throwable $ex) {
-            if($this->outputContextStack->hasContext()) {
-                $oc = $this->outputContextStack->getMainContext();
+            if($this->obStack->hasBuffer()) {
+                $oc = $this->obStack->getMain();
                 if($oc->isOpen()) {
                     $oc->forceClose();
                 }
                 
-                while($this->outputContextStack->hasContext()) {
-                    $this->outputContextStack->popContext();
+                while($this->obStack->hasBuffer()) {
+                    $this->obStack->pop();
                 }
             }
             
@@ -85,22 +86,22 @@ class RenderContext
     
     /**
      * @param string $template
-     * @param array|null $parameters
+     * @param array $parameters
      * @return void
      * @throws RenderException
      */
-    public function merge(string $template, array|null $parameters = null): void
+    public function merge(string $template, array $parameters = []): void
     {
         $template = $this->findTemplateFile($template);
-        $this->outputContextStack->pushContext(OutputContext::create("Merge {$template}"));
-        $extendedContent = $this->outputContextStack->getCurrentContext()
+        $this->obStack->push(OutputBuffer::create("Merge {$template}"));
+        $extendedContent = $this->obStack->getCurrent()
             ->open()
-            ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $parameters ?? $this->params))
+            ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $this->params, $parameters))
             ->close()
             ->getOutput();
         
-        $this->outputContextStack->popContext();
-        $this->outputContextStack->getCurrentContext()->writeContent($extendedContent);
+        $this->obStack->pop();
+        $this->obStack->getCurrent()->writeContent($extendedContent);
     }
     
     /**
@@ -132,14 +133,14 @@ class RenderContext
      * @return void
      * @throws RenderException
      */
-    public function embed(string $template, array|null $parameters = null): void
+    public function embed(string $template, array $parameters = []): void
     {
         $context = new RenderContext(
             RenderContextStack::instance(),
-            $parameters ?? $this->params
+            array_merge($this->params, $parameters)
         );
         $embedContent = $context->render($template);
-        $this->outputContextStack->getCurrentContext()->writeContent($embedContent);
+        $this->obStack->getCurrent()->writeContent($embedContent);
     }
     
     /**
@@ -147,63 +148,63 @@ class RenderContext
      * @return void
      * @throws RenderException
      */
-    public function startBlock(string $name): void
+    public function startSlot(string $name): void
     {
-        $block = new RenderBlock($this->outputContextStack, $name);
-        foreach($this->blocks as $oldBlock) {
-            if($oldBlock->getName() === $name) {
-                if(!$oldBlock->isEnded()) {
-                    throw new RenderException("Cannot overwrite non-ended block '{$name}' in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
+        $slot = new Slot($this->obStack, $name);
+        foreach($this->slots as $oldSlot) {
+            if($oldSlot->getName() === $name) {
+                if(!$oldSlot->isEnded()) {
+                    throw new RenderException("Cannot overwrite non-ended slot '{$name}' in render context '{$this->obStack->getCurrent()->getName()}'.");
                 }
                 
-                $oldBlock->replaceWith($block);
+                $oldSlot->replaceWith($slot);
                 break;
             }
         }
         
-        $this->blocks[] = $block;
-        $block->start();
+        $this->slots[] = $slot;
+        $slot->start();
     }
     
     /**
      * @return void
      * @throws RenderException
      */
-    public function renderParentBlock(): void
+    public function renderParentSlot(): void
     {
-        foreach(array_reverse($this->blocks) as $block) {
-            if(!$block->isEnded()) {
-                if(!$block->isReplacing()) {
-                    throw new RenderException("Block '{$block->getName()}' is not extending a parent block in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
+        foreach(array_reverse($this->slots) as $slot) {
+            if(!$slot->isEnded()) {
+                if(!$slot->isReplacing()) {
+                    throw new RenderException("Slot '{$slot->getName()}' is not extending a parent slot in render context '{$this->obStack->getCurrent()->getName()}'.");
                 }
                 
-                $this->outputContextStack->getCurrentContext()
-                    ->writeContent($block->getParentOutput());
+                $this->obStack->getCurrent()
+                    ->writeContent($slot->getParentOutput());
                 return;
             }
         }
         
-        throw new RenderException("There is no parent block to render in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
+        throw new RenderException("There is no parent slot to render in render context '{$this->obStack->getCurrent()->getName()}'.");
     }
     
     /**
      * @return void
      * @throws RenderException
      */
-    public function endBlock(): void
+    public function endSlot(): void
     {
-        foreach(array_reverse($this->blocks) as $block) {
-            if(!$block->isEnded()) {
-                $block->end();
+        foreach(array_reverse($this->slots) as $slot) {
+            if(!$slot->isEnded()) {
+                $slot->end();
                 
-                if(!$block->isReplacing()) {
-                    $this->outputContextStack->getCurrentContext()->writeContent($block->getMarkup());
+                if(!$slot->isReplacing()) {
+                    $this->obStack->getCurrent()->writeContent($slot->getMarkup());
                 }
                 
                 return;
             }
         }
         
-        throw new RenderException("There are no more blocks to end in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
+        throw new RenderException("There are no more slots to end in render context '{$this->obStack->getCurrent()->getName()}'.");
     }
 }
