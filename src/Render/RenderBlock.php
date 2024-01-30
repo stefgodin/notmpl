@@ -17,7 +17,8 @@ class RenderBlock
     private RenderBlock|null $replacingBlock;
     
     public function __construct(
-        private string $name,
+        private readonly OutputContextStack $outputContextStack,
+        private readonly string             $name,
     )
     {
         $this->id = uniqid("{$name}_");
@@ -38,7 +39,7 @@ class RenderBlock
     
     public function isStarted(): bool
     {
-        return isset($this->obLevel);
+        return $this->outputContext->wasOpened();
     }
     
     /**
@@ -47,6 +48,7 @@ class RenderBlock
      */
     public function start(): static
     {
+        $this->outputContextStack->pushContext($this->outputContext);
         $this->outputContext->open();
         return $this;
     }
@@ -80,7 +82,11 @@ class RenderBlock
      */
     public function end(): static
     {
+        if($this->outputContextStack->getCurrentContext() !== $this->outputContext) {
+            throw new RenderException("Cannot close block '{$this->outputContext->getName()}' when it is not the current output context.");
+        }
         $this->outputContext->close();
+        $this->outputContextStack->popContext();
         return $this;
     }
     
@@ -91,10 +97,6 @@ class RenderBlock
      */
     public function replaceWith(RenderBlock $block): static
     {
-        if($block === $this) {
-            throw new RenderException("Cannot replace block '{$block->name}' by itself.");
-        }
-        
         $this->replacedByBlock = $block;
         $block->replacingBlock = $this;
         return $this;

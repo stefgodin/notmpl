@@ -4,11 +4,11 @@
          verbose="true"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="stefmachine/render unit test suite">
-            <directory>tests/Unit</directory>
+        <testsuite name="stefmachine/notmpl/render test suite">
+            <directory>tests/Render</directory>
         </testsuite>
-        <testsuite name="stefmachine/render integration test suite">
-            <directory>tests/Integration</directory>
+        <testsuite name="stefmachine/notmpl/escape test suite">
+            <directory>tests/Escape</directory>
         </testsuite>
     </testsuites>
 </phpunit>

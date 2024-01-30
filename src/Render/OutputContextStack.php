@@ -4,16 +4,10 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Exception\RenderException;
-use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
-/**
- * @internal
- */
-class RenderContextStack
+class OutputContextStack
 {
-    use SingletonTrait;
-    
-    /** @var RenderContext[] */
+    /** @var OutputContext[] */
     private array $stack;
     
     public function __construct()
@@ -21,7 +15,7 @@ class RenderContextStack
         $this->stack = [];
     }
     
-    public function pushContext(RenderContext $context): static
+    public function pushContext(OutputContext $context): static
     {
         $this->stack[] = $context;
         return $this;
@@ -34,16 +28,29 @@ class RenderContextStack
     }
     
     /**
-     * @return RenderContext
+     * @return OutputContext
      * @throws RenderException
      */
-    public function getCurrentContext(): RenderContext
+    public function getCurrentContext(): OutputContext
     {
         if(!$this->hasContext()) {
-            throw new RenderException("There is no current rendering context.");
+            throw new RenderException("There is no current output context.");
         }
         
         return $this->stack[count($this->stack) - 1];
+    }
+    
+    /**
+     * @return OutputContext
+     * @throws RenderException
+     */
+    public function getMainContext(): OutputContext
+    {
+        if(!$this->hasContext()) {
+            throw new RenderException("There is no main output context.");
+        }
+        
+        return $this->stack[0];
     }
     
     public function hasContext(): bool

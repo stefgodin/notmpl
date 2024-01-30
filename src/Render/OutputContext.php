@@ -10,21 +10,28 @@ use Stefmachine\NoTmpl\Exception\RenderException;
  */
 class OutputContext
 {
+    /** @var OutputContext[] */
+    private static array $stack = [];
+    
+    private static function getCurrentContextName(): string
+    {
+        return (self::$stack[ob_get_level()] ?? null)?->getName() ?? 'unknown';
+    }
+    
     private string|null $output;
     private int|null $level;
     
     public function __construct(
-        private string $name,
+        private readonly string $name,
     )
     {
         $this->output = null;
         $this->level = null;
     }
     
-    public function setName(string $_name): static
+    public function getName(): string
     {
-        $this->name = $_name;
-        return $this;
+        return $this->name;
     }
     
     public static function create(string $name): OutputContext
@@ -44,9 +51,11 @@ class OutputContext
         
         ob_start(function(string $buffer) {
             $this->output = $buffer;
+            unset(self::$stack[$this->level]);
             return "";
         });
         $this->level = ob_get_level();
+        self::$stack[$this->level] = $this;
         return $this;
     }
     
@@ -58,6 +67,11 @@ class OutputContext
     public function isOpen(): bool
     {
         return $this->wasOpened() && !$this->isClosed();
+    }
+    
+    private function isCurrentOutputBuffer(): bool
+    {
+        return $this->level === ob_get_level();
     }
     
     /**
@@ -74,8 +88,9 @@ class OutputContext
             throw new RenderException("The output context '{$this->name}' cannot be closed because it was never opened in the first place.");
         }
         
-        if($this->level !== ob_get_level()) {
-            throw new RenderException("The output context '{$this->name}' precedes other non-closed output contexts/buffers.");
+        if(!$this->isCurrentOutputBuffer()) {
+            $higherContextName = self::getCurrentContextName();
+            throw new RenderException("The output context '{$this->name}' cannot be closed before non-closed output context '{$higherContextName}'.");
         }
         
         ob_end_clean();
@@ -88,14 +103,11 @@ class OutputContext
      */
     public function forceClose(): static
     {
-        if(!$this->isOpen()) {
-            throw new RenderException("Cannot force to close output context '{$this->name}' since it was not opened.");
-        }
-        
-        $oldLevel = null;
-        while(ob_get_level() >= $this->level && ob_get_level() > 0 && $oldLevel !== ob_get_level()) {
-            $oldLevel = ob_get_level();
-            ob_end_clean();
+        while($this->level !== null && ob_get_level() >= $this->level && ob_get_level() > 0) {
+            if(ob_end_clean() === false && ob_end_flush() === false) {
+                $higherContextName = self::getCurrentContextName();
+                throw new RenderException("Failing to forcefully close output context '{$this->name}' because '{$higherContextName}' context prevents closing.");
+            }
         }
         return $this;
     }
@@ -129,6 +141,11 @@ class OutputContext
             throw new RenderException("Cannot write content into closed output context '{$this->name}'.");
         }
         
+        if(!$this->isCurrentOutputBuffer()) {
+            $higherContextName = self::getCurrentContextName();
+            throw new RenderException("Cannot write content into output context '{$this->name}' when other higher context '{$higherContextName}' is still open.");
+        }
+        
         echo $content;
         return $this;
     }
@@ -143,6 +160,11 @@ class OutputContext
     {
         if(!$this->isOpen()) {
             throw new RenderException("Cannot include file into closed output context '{$this->name}'.");
+        }
+        
+        if(!$this->isCurrentOutputBuffer()) {
+            $higherContextName = self::getCurrentContextName();
+            throw new RenderException("Cannot include file into output context '{$this->name}' when other higher context '{$higherContextName}' is still open.");
         }
         
         if(!file_exists($file)) {

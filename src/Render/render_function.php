@@ -30,16 +30,16 @@ function embed(string $template, array|null $parameters = null): void
 }
 
 /**
- * Proxies {@see NoTmpl::extend()}
+ * Proxies {@see NoTmpl::merge()}
  *
- * @param string $template - The extended template to render
+ * @param string $template - The merged template to render
  * @param array|null $parameters - Specified parameters or the parameters of the current context
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function extend(string $template, array|null $parameters = null): void
+function merge(string $template, array|null $parameters = null): void
 {
-    NoTmpl::extend($template, $parameters);
+    NoTmpl::merge($template, $parameters);
 }
 
 /**

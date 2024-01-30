@@ -16,7 +16,7 @@ class RenderContext
     
     /** @var RenderBlock[] */
     private array $blocks;
-    private OutputContext $outputContext;
+    private OutputContextStack $outputContextStack;
     
     public function __construct(
         private RenderContextStack $renderContextStack,
@@ -24,7 +24,7 @@ class RenderContext
     )
     {
         $this->blocks = [];
-        $this->outputContext = OutputContext::create("Render unknown");
+        $this->outputContextStack = new OutputContextStack();
     }
     
     /**
@@ -34,21 +34,22 @@ class RenderContext
      */
     public function render(string $template): string
     {
+        if($this->outputContextStack->hasContext()) {
+            throw new RenderException("Render context is already rendering '{$this->outputContextStack->getMainContext()->getName()}'.");
+        }
+        
         try {
-            $this->renderContextStack->pushContext($this);
-            
             $template = $this->findTemplateFile($template);
-            if($this->outputContext->wasOpened()) {
-                throw new RenderException("Rendering context of '{$template}' already rendering/rendered.");
-            }
             
-            $this->outputContext
-                ->setName("Render {$template}")
-                ->open()
+            $this->renderContextStack->pushContext($this);
+            $oc = $this->outputContextStack
+                ->pushContext(OutputContext::create("Render '{$template}'"))
+                ->getMainContext();
+            $oc->open()
                 ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $this->params))
                 ->close();
             
-            $output = $this->outputContext->getOutput();
+            $output = $oc->getOutput();
             for($outputChanged = true; $outputChanged; $outputChanged = false) {
                 foreach($this->blocks as $block) {
                     $newOutput = str_replace($block->getMarkup(), $block->getOutput(), $output);
@@ -57,12 +58,20 @@ class RenderContext
                 }
             }
             
+            $this->outputContextStack->popContext();
             $this->renderContextStack->popContext();
             
             return $output;
         } catch(Throwable $ex) {
-            if($this->outputContext->isOpen()) {
-                $this->outputContext->forceClose();
+            if($this->outputContextStack->hasContext()) {
+                $oc = $this->outputContextStack->getMainContext();
+                if($oc->isOpen()) {
+                    $oc->forceClose();
+                }
+                
+                while($this->outputContextStack->hasContext()) {
+                    $this->outputContextStack->popContext();
+                }
             }
             
             if($this->renderContextStack->hasContext() && $this->renderContextStack->getCurrentContext() === $this) {
@@ -80,21 +89,25 @@ class RenderContext
      * @return void
      * @throws RenderException
      */
-    public function extend(string $template, array|null $parameters = null): void
+    public function merge(string $template, array|null $parameters = null): void
     {
-        if(!$this->outputContext->isOpen()) {
-            throw new RenderException("Cannot extend closed render context.");
-        }
-        
         $template = $this->findTemplateFile($template);
-        $extendedContent = OutputContext::create("Extend {$template}")
+        $this->outputContextStack->pushContext(OutputContext::create("Merge {$template}"));
+        $extendedContent = $this->outputContextStack->getCurrentContext()
             ->open()
             ->includeFile($template, array_merge($this->getConfig()->getRenderGlobalParams(), $parameters ?? $this->params))
             ->close()
             ->getOutput();
-        $this->outputContext->writeContent($extendedContent);
+        
+        $this->outputContextStack->popContext();
+        $this->outputContextStack->getCurrentContext()->writeContent($extendedContent);
     }
     
+    /**
+     * @param string $template
+     * @return string
+     * @throws RenderException
+     */
     private function findTemplateFile(string $template): string
     {
         if(file_exists($template)) {
@@ -121,16 +134,12 @@ class RenderContext
      */
     public function embed(string $template, array|null $parameters = null): void
     {
-        if(!$this->outputContext->isOpen()) {
-            throw new RenderException("Cannot embed into a closed render context.");
-        }
-        
         $context = new RenderContext(
             RenderContextStack::instance(),
             $parameters ?? $this->params
         );
         $embedContent = $context->render($template);
-        $this->outputContext->writeContent($embedContent);
+        $this->outputContextStack->getCurrentContext()->writeContent($embedContent);
     }
     
     /**
@@ -140,15 +149,11 @@ class RenderContext
      */
     public function startBlock(string $name): void
     {
-        if(!$this->outputContext->isOpen()) {
-            throw new RenderException("Cannot add block into a closed render context.");
-        }
-        
-        $block = new RenderBlock($name);
+        $block = new RenderBlock($this->outputContextStack, $name);
         foreach($this->blocks as $oldBlock) {
             if($oldBlock->getName() === $name) {
                 if(!$oldBlock->isEnded()) {
-                    throw new RenderException("Cannot extend non-ended block '{$name}'.");
+                    throw new RenderException("Cannot overwrite non-ended block '{$name}' in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
                 }
                 
                 $oldBlock->replaceWith($block);
@@ -166,23 +171,19 @@ class RenderContext
      */
     public function renderParentBlock(): void
     {
-        if(!$this->outputContext->isOpen()) {
-            throw new RenderException("Cannot render parent block into a closed render context.");
-        }
-        
         foreach(array_reverse($this->blocks) as $block) {
             if(!$block->isEnded()) {
-                
                 if(!$block->isReplacing()) {
-                    throw new RenderException("Block '{$block->getName()}' is not extending a parent block.");
+                    throw new RenderException("Block '{$block->getName()}' is not extending a parent block in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
                 }
                 
-                $this->outputContext->writeContent($block->getParentOutput());
+                $this->outputContextStack->getCurrentContext()
+                    ->writeContent($block->getParentOutput());
                 return;
             }
         }
         
-        throw new RenderException("There is no parent block to render.");
+        throw new RenderException("There is no parent block to render in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
     }
     
     /**
@@ -191,22 +192,18 @@ class RenderContext
      */
     public function endBlock(): void
     {
-        if(!$this->outputContext->isOpen()) {
-            throw new RenderException("Cannot end block from a closed render context.");
-        }
-        
         foreach(array_reverse($this->blocks) as $block) {
             if(!$block->isEnded()) {
                 $block->end();
                 
                 if(!$block->isReplacing()) {
-                    $this->outputContext->writeContent($block->getMarkup());
+                    $this->outputContextStack->getCurrentContext()->writeContent($block->getMarkup());
                 }
                 
                 return;
             }
         }
         
-        throw new RenderException("There are no more blocks to end.");
+        throw new RenderException("There are no more blocks to end in render context '{$this->outputContextStack->getCurrentContext()->getName()}'.");
     }
 }

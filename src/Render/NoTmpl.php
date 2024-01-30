@@ -53,16 +53,16 @@ class NoTmpl
     
     /**
      * Starts a render context within the current render context.
-     * Blocks of the extended template are shared and can be extended.
+     * Blocks of the merged template are shared and can be overwritten.
      *
-     * @param string $template - The extended template to render
+     * @param string $template - The merged template to render
      * @param array|null $parameters - Specified parameters or the parameters of the current context
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function extend(string $template, array|null $parameters = null): void
+    public static function merge(string $template, array|null $parameters = null): void
     {
-        RenderContextStack::instance()->getCurrentContext()->extend($template, $parameters);
+        RenderContextStack::instance()->getCurrentContext()->merge($template, $parameters);
     }
     
     /**
