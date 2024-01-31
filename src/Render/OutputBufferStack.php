@@ -3,6 +3,7 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 
 /**
@@ -37,7 +38,10 @@ class OutputBufferStack
     public function getCurrent(): OutputBuffer
     {
         if($this->isEmpty()) {
-            throw new RenderException("There is no current output buffer.");
+            throw new RenderException(
+                "There is no current output buffer.",
+                RenderError::OBSTACK_NO_CURRENT_COMPONENT
+            );
         }
         
         return $this->stack[count($this->stack) - 1];

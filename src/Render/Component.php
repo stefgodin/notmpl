@@ -4,6 +4,7 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 
 /**
@@ -56,7 +57,10 @@ class Component
     public function end(): static
     {
         if($this->rendering) {
-            throw new RenderException("Cannot close '{$this->ob->getName()}' while it is still rendering.");
+            throw new RenderException(
+                "Cannot close '{$this->ob->getName()}' while it is still rendering.",
+                RenderError::CMP_RENDER_LOCK
+            );
         }
         
         $this->ob->close();

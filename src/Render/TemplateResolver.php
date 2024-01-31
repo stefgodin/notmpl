@@ -4,6 +4,7 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
@@ -43,6 +44,9 @@ class TemplateResolver
             }
         }
         
-        throw new RenderException(sprintf("Could not resolve template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)));
+        throw new RenderException(
+            sprintf("Could not resolve template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)),
+            RenderError::TMPLRES_FILE_NOT_FOUND
+        );
     }
 }

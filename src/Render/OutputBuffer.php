@@ -3,6 +3,7 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 
 /**
@@ -42,7 +43,10 @@ class OutputBuffer
     public function open(): static
     {
         if($this->isOpen()) {
-            throw new RenderException("The output buffer '{$this->name}' is already opened.");
+            throw new RenderException(
+                "The output buffer '{$this->name}' is already opened.",
+                RenderError::OB_ALREADY_OPENED
+            );
         }
         
         ob_start(function(string $buffer) {
@@ -79,16 +83,25 @@ class OutputBuffer
     public function close(): static
     {
         if($this->isClosed()) {
-            throw new RenderException("The output buffer '{$this->name}' is already closed.");
+            throw new RenderException(
+                "The output buffer '{$this->name}' is already closed.",
+                RenderError::OB_ALREADY_CLOSED
+            );
         }
         
         if(!$this->wasOpened()) {
-            throw new RenderException("The output buffer '{$this->name}' cannot be closed because it was never opened in the first place.");
+            throw new RenderException(
+                "The output buffer '{$this->name}' cannot be closed because it was never opened in the first place.",
+                RenderError::OB_NEVER_OPENED
+            );
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentLevelName();
-            throw new RenderException("The output buffer '{$this->name}' cannot be closed before non-closed output buffer '{$higherContextName}'.");
+            throw new RenderException(
+                "The output buffer '{$this->name}' cannot be closed before non-closed output buffer '{$higherContextName}'.",
+                RenderError::OB_CLOSE_WRONG_DEPTH
+            );
         }
         
         ob_end_clean();
@@ -104,7 +117,10 @@ class OutputBuffer
         while($this->level !== null && ob_get_level() >= $this->level && ob_get_level() > 0) {
             if(ob_end_clean() === false && ob_end_flush() === false) {
                 $higherContextName = self::getCurrentLevelName();
-                throw new RenderException("Failing to forcefully close output buffer '{$this->name}' because '{$higherContextName}' context prevents closing.");
+                throw new RenderException(
+                    "Failing to forcefully close output buffer '{$this->name}' because '{$higherContextName}' context prevents closing.",
+                    RenderError::OB_FORCEFUL_CLOSE_FAILED
+                );
             }
         }
         return $this;
@@ -122,7 +138,10 @@ class OutputBuffer
     public function getOutput(): string
     {
         if(!$this->isClosed()) {
-            throw new RenderException("Cannot get output from output buffer '{$this->name}' since it was never closed.");
+            throw new RenderException(
+                "Cannot get output from output buffer '{$this->name}' since it was never closed.",
+                RenderError::OB_NEVER_CLOSED
+            );
         }
         
         return $this->output;
@@ -136,12 +155,18 @@ class OutputBuffer
     public function writeContent(string $content): static
     {
         if(!$this->isOpen()) {
-            throw new RenderException("Cannot write content into closed output buffer '{$this->name}'.");
+            throw new RenderException(
+                "Cannot write content into closed output buffer '{$this->name}'.",
+                RenderError::OB_WRITE_CLOSED
+            );
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentLevelName();
-            throw new RenderException("Cannot write content into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
+            throw new RenderException(
+                "Cannot write content into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.",
+                RenderError::OB_WRITE_WRONG_DEPTH
+            );
         }
         
         echo $content;
@@ -157,16 +182,25 @@ class OutputBuffer
     public function includeFile(string $file, array $vars = []): static
     {
         if(!$this->isOpen()) {
-            throw new RenderException("Cannot include file into closed output buffer '{$this->name}'.");
+            throw new RenderException(
+                "Cannot include file into closed output buffer '{$this->name}'.",
+                RenderError::OB_FILE_INCLUDE_CLOSED
+            );
         }
         
         if(!$this->isCurrentOutputBuffer()) {
             $higherContextName = self::getCurrentLevelName();
-            throw new RenderException("Cannot include file into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
+            throw new RenderException(
+                "Cannot include file into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.",
+                RenderError::OB_FILE_INCLUDE_WRONG_DEPTH
+            );
         }
         
         if(!file_exists($file)) {
-            throw new RenderException("File '{$file}' not found for rendering.");
+            throw new RenderException(
+                "File '{$file}' not found for rendering.",
+                RenderError::OB_FILE_INCLUDE_NOT_FOUND
+            );
         }
         
         if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {

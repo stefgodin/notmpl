@@ -3,6 +3,7 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
@@ -40,7 +41,10 @@ class ComponentStack
     public function getCurrent(): Component
     {
         if($this->isEmpty()) {
-            throw new RenderException("There is no current component.");
+            throw new RenderException(
+                "There is no current component.",
+                RenderError::CMPSTACK_NO_CURRENT_COMPONENT
+            );
         }
         
         return $this->stack[count($this->stack) - 1];

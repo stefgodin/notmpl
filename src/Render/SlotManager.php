@@ -3,6 +3,7 @@
 
 namespace Stefmachine\NoTmpl\Render;
 
+use Stefmachine\NoTmpl\Exception\RenderError;
 use Stefmachine\NoTmpl\Exception\RenderException;
 
 /**
@@ -32,12 +33,18 @@ class SlotManager
         $slot = new Slot($this->obStack, $name);
         $oldSlot = $this->getFirstSlotWithName($name);
         if($oldSlot && !$oldSlot->isEnded()) {
-            throw new RenderException("Cannot overwrite non-ended slot '{$name}' within '{$this->obStack->getCurrent()->getName()}'.");
+            throw new RenderException(
+                "Cannot overwrite non-ended slot '{$name}' within '{$this->obStack->getCurrent()->getName()}'.",
+                RenderError::SLOTMAN_OPEN_SLOT_OVERWRITE
+            );
         }
         
         if(!$oldSlot) {
             if($this->creationLocked) {
-                throw new RenderException("Cannot overwrite non-existent slot '{$name}'.");
+                throw new RenderException(
+                    "Cannot overwrite non-existent slot '{$name}'.",
+                    RenderError::SLOTMAN_UNDEFINED_SLOT_OVERWRITE
+                );
             }
             
             $this->obStack->getCurrent()->writeContent($slot->getMarkup());
@@ -55,12 +62,18 @@ class SlotManager
     {
         $openSlot = $this->getLastOpenSlot();
         if(!$openSlot) {
-            throw new RenderException("There is no parent slot to render within '{$this->obStack->getCurrent()->getName()}'.");
+            throw new RenderException(
+                "There is no parent slot to render within '{$this->obStack->getCurrent()->getName()}'.",
+                RenderError::SLOTMAN_NO_CHILD_SLOT
+            );
         }
         
         $parentSlot = $this->getFirstSlotWithName($openSlot->getName());
         if(!$parentSlot) {
-            throw new RenderException("Slot '{$openSlot->getName()}' is not extending a parent slot within '{$this->obStack->getCurrent()->getName()}'.");
+            throw new RenderException(
+                "Slot '{$openSlot->getName()}' is not extending a parent slot within '{$this->obStack->getCurrent()->getName()}'.",
+                RenderError::SLOTMAN_NO_PARENT_SLOT
+            );
         }
         
         $this->obStack->getCurrent()
@@ -75,7 +88,10 @@ class SlotManager
     {
         $openSlot = $this->getLastOpenSlot();
         if(!$openSlot) {
-            throw new RenderException("There are no more slots to end within '{$this->obStack->getCurrent()->getName()}'.");
+            throw new RenderException(
+                "There are no more slots to end within '{$this->obStack->getCurrent()->getName()}'.",
+                RenderError::SLOTMAN_NO_OPEN_SLOT
+            );
         }
         
         $openSlot->end();
@@ -111,7 +127,10 @@ class SlotManager
     {
         foreach($this->slots as $slot) {
             if(!$slot->isEnded()) {
-                throw new RenderException("Cannot lock slot creation while some slots are still opened.");
+                throw new RenderException(
+                    "Cannot lock slot creation while some slots are still opened.",
+                    RenderError::SLOTMAN_SLOTS_STILL_OPENED
+                );
             }
         }
         $this->creationLocked = true;

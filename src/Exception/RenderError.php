@@ -1,0 +1,34 @@
+<?php
+
+
+namespace Stefmachine\NoTmpl\Exception;
+
+enum RenderError: int
+{
+    case CMP_RENDER_LOCK = 1;
+    
+    case CMPSTACK_NO_CURRENT_COMPONENT = 51;
+    
+    case OB_ALREADY_OPENED = 101;
+    case OB_ALREADY_CLOSED = 102;
+    case OB_NEVER_OPENED = 103;
+    case OB_NEVER_CLOSED = 104;
+    case OB_CLOSE_WRONG_DEPTH = 105;
+    case OB_FORCEFUL_CLOSE_FAILED = 106;
+    case OB_WRITE_CLOSED = 107;
+    case OB_WRITE_WRONG_DEPTH = 108;
+    case OB_FILE_INCLUDE_CLOSED = 109;
+    case OB_FILE_INCLUDE_WRONG_DEPTH = 110;
+    case OB_FILE_INCLUDE_NOT_FOUND = 111;
+    
+    case OBSTACK_NO_CURRENT_COMPONENT = 151;
+    
+    case SLOTMAN_OPEN_SLOT_OVERWRITE = 201;
+    case SLOTMAN_UNDEFINED_SLOT_OVERWRITE = 202;
+    case SLOTMAN_NO_CHILD_SLOT = 203;
+    case SLOTMAN_NO_PARENT_SLOT = 204;
+    case SLOTMAN_NO_OPEN_SLOT = 205;
+    case SLOTMAN_SLOTS_STILL_OPENED = 206;
+    
+    case TMPLRES_FILE_NOT_FOUND = 251;
+}
