@@ -40,7 +40,7 @@ class OutputBufferStack
         if($this->isEmpty()) {
             throw new RenderException(
                 "There is no current output buffer.",
-                RenderError::OBSTACK_NO_CURRENT_COMPONENT
+                RenderError::OBSTACK_OB_NOT_FOUND
             );
         }
         

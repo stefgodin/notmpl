@@ -43,7 +43,7 @@ class ComponentStack
         if($this->isEmpty()) {
             throw new RenderException(
                 "There is no current component.",
-                RenderError::CMPSTACK_NO_CURRENT_COMPONENT
+                RenderError::CMPSTACK_CMP_NOT_FOUND
             );
         }
         

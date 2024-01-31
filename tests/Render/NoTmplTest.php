@@ -142,7 +142,7 @@ class NoTmplTest extends TestCase
     public function should_throw_on_non_ended_component(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::OB_CLOSE_WRONG_DEPTH->value);
+        $this->expectExceptionCode(RenderError::OB_INVALID_STATE->value);
         NoTmpl::render('non_ended_component.php');
     }
     
@@ -150,7 +150,7 @@ class NoTmplTest extends TestCase
     public function should_throw_on_non_ended_slot(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::SLOTMAN_SLOTS_STILL_OPENED->value);
+        $this->expectExceptionCode(RenderError::SLOTMAN_INVALID_SLOT_STATE->value);
         NoTmpl::render('non_ended_slot.php');
     }
     
@@ -158,7 +158,7 @@ class NoTmplTest extends TestCase
     public function should_throw_on_non_ended_slot_in_component(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::SLOTMAN_SLOTS_STILL_OPENED->value);
+        $this->expectExceptionCode(RenderError::SLOTMAN_INVALID_SLOT_STATE->value);
         NoTmpl::render('non_ended_slot_component.php');
     }
     
@@ -166,7 +166,7 @@ class NoTmplTest extends TestCase
     public function should_throw_when_using_component_out_of_render_context(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMPSTACK_NO_CURRENT_COMPONENT->value);
+        $this->expectExceptionCode(RenderError::CMPSTACK_CMP_NOT_FOUND->value);
         NoTmpl::component('basic.php');
     }
     
@@ -174,7 +174,7 @@ class NoTmplTest extends TestCase
     public function should_throw_when_using_slot_out_of_render_context(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMPSTACK_NO_CURRENT_COMPONENT->value);
+        $this->expectExceptionCode(RenderError::CMPSTACK_CMP_NOT_FOUND->value);
         NoTmpl::slot('test');
     }
     
@@ -182,7 +182,7 @@ class NoTmplTest extends TestCase
     public function should_throw_when_using_end_slot_out_of_render_context(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMPSTACK_NO_CURRENT_COMPONENT->value);
+        $this->expectExceptionCode(RenderError::CMPSTACK_CMP_NOT_FOUND->value);
         NoTmpl::endSlot();
     }
     
@@ -190,7 +190,7 @@ class NoTmplTest extends TestCase
     public function should_throw_when_using_parent_slot_out_of_render_context(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMPSTACK_NO_CURRENT_COMPONENT->value);
+        $this->expectExceptionCode(RenderError::CMPSTACK_CMP_NOT_FOUND->value);
         NoTmpl::parentSlot();
     }
     
@@ -220,7 +220,7 @@ class NoTmplTest extends TestCase
     public function should_throw_on_early_component_end(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMP_RENDER_LOCK->value);
+        $this->expectExceptionCode(RenderError::CMP_INVALID_STATE->value);
         render('early_component_end.php');
     }
     
@@ -228,7 +228,7 @@ class NoTmplTest extends TestCase
     public function should_throw_on_early_subcomponent_end(): void
     {
         $this->expectException(RenderException::class);
-        $this->expectExceptionCode(RenderError::CMP_RENDER_LOCK->value);
+        $this->expectExceptionCode(RenderError::CMP_INVALID_STATE->value);
         render('early_subcomponent_end.php');
     }
 }

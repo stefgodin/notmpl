@@ -35,7 +35,7 @@ class SlotManager
         if($oldSlot && !$oldSlot->isEnded()) {
             throw new RenderException(
                 "Cannot overwrite non-ended slot '{$name}' within '{$this->obStack->getCurrent()->getName()}'.",
-                RenderError::SLOTMAN_OPEN_SLOT_OVERWRITE
+                RenderError::SLOTMAN_INVALID_SLOT_STATE
             );
         }
         
@@ -43,7 +43,7 @@ class SlotManager
             if($this->creationLocked) {
                 throw new RenderException(
                     "Cannot overwrite non-existent slot '{$name}'.",
-                    RenderError::SLOTMAN_UNDEFINED_SLOT_OVERWRITE
+                    RenderError::SLOTMAN_SLOT_NOT_FOUND
                 );
             }
             
@@ -64,7 +64,7 @@ class SlotManager
         if(!$openSlot) {
             throw new RenderException(
                 "There is no parent slot to render within '{$this->obStack->getCurrent()->getName()}'.",
-                RenderError::SLOTMAN_NO_CHILD_SLOT
+                RenderError::SLOTMAN_SLOT_NOT_FOUND
             );
         }
         
@@ -72,7 +72,7 @@ class SlotManager
         if(!$parentSlot) {
             throw new RenderException(
                 "Slot '{$openSlot->getName()}' is not extending a parent slot within '{$this->obStack->getCurrent()->getName()}'.",
-                RenderError::SLOTMAN_NO_PARENT_SLOT
+                RenderError::SLOTMAN_SLOT_NOT_FOUND
             );
         }
         
@@ -90,7 +90,7 @@ class SlotManager
         if(!$openSlot) {
             throw new RenderException(
                 "There are no more slots to end within '{$this->obStack->getCurrent()->getName()}'.",
-                RenderError::SLOTMAN_NO_OPEN_SLOT
+                RenderError::SLOTMAN_SLOT_NOT_FOUND
             );
         }
         
@@ -129,7 +129,7 @@ class SlotManager
             if(!$slot->isEnded()) {
                 throw new RenderException(
                     "Cannot lock slot creation while some slots are still opened.",
-                    RenderError::SLOTMAN_SLOTS_STILL_OPENED
+                    RenderError::SLOTMAN_INVALID_SLOT_STATE
                 );
             }
         }

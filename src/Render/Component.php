@@ -59,7 +59,7 @@ class Component
         if($this->rendering) {
             throw new RenderException(
                 "Cannot close '{$this->ob->getName()}' while it is still rendering.",
-                RenderError::CMP_RENDER_LOCK
+                RenderError::CMP_INVALID_STATE
             );
         }
         
