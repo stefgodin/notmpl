@@ -13,17 +13,12 @@ class Slot
     private string $id;
     private OutputBuffer $ob;
     
-    private Slot|null $replacedBySlot;
-    private Slot|null $replacingSlot;
-    
     public function __construct(
         private readonly OutputBufferStack $obStack,
         private readonly string            $name,
     )
     {
         $this->id = uniqid("{$name}_");
-        $this->replacedBySlot = null;
-        $this->replacingSlot = null;
         $this->ob = new OutputBuffer($this->obStack, "slot:{$this->name}-{$this->id}");
     }
     
@@ -35,11 +30,6 @@ class Slot
     public function getName(): string
     {
         return $this->name;
-    }
-    
-    public function isStarted(): bool
-    {
-        return $this->ob->wasOpened();
     }
     
     /**
@@ -61,20 +51,6 @@ class Slot
      * @return string
      * @throws RenderException
      */
-    public function getOutput(): string
-    {
-        return $this->replacedBySlot?->getOutput() ?? $this->ob->getOutput();
-    }
-    
-    /**
-     * @return string
-     * @throws RenderException
-     */
-    public function getParentOutput(): string
-    {
-        return $this->isReplacing() ? $this->replacingSlot->getParentOutput() : $this->ob->getOutput();
-    }
-    
     public function getOriginalOutput(): string
     {
         return $this->ob->getOutput();
@@ -88,27 +64,5 @@ class Slot
     {
         $this->ob->close();
         return $this;
-    }
-    
-    /**
-     * @param Slot $slot
-     * @return $this
-     * @throws RenderException
-     */
-    public function replaceWith(Slot $slot): static
-    {
-        $this->replacedBySlot = $slot;
-        $slot->replacingSlot = $this;
-        return $this;
-    }
-    
-    public function isReplaced(): bool
-    {
-        return $this->replacedBySlot !== null;
-    }
-    
-    public function isReplacing(): bool
-    {
-        return $this->replacingSlot !== null;
     }
 }

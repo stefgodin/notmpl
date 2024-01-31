@@ -9,6 +9,7 @@ namespace Stefmachine\NoTmpl\Escape;
  * @param mixed $value
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\EscapeException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function esc_html(mixed $value): string
 {
@@ -21,6 +22,7 @@ function esc_html(mixed $value): string
  * @param mixed $value
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\EscapeException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function esc_html_attr(mixed $value): string
 {
@@ -33,6 +35,7 @@ function esc_html_attr(mixed $value): string
  * @param mixed $value
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\EscapeException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function esc_js(mixed $value): string
 {
@@ -45,6 +48,7 @@ function esc_js(mixed $value): string
  * @param mixed $value
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\EscapeException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function esc_css(mixed $value): string
 {

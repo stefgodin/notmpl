@@ -46,19 +46,6 @@ class ComponentStack
         return $this->stack[count($this->stack) - 1];
     }
     
-    /**
-     * @return Component
-     * @throws RenderException
-     */
-    public function getMain(): Component
-    {
-        if($this->isEmpty()) {
-            throw new RenderException("There is no main component.");
-        }
-        
-        return $this->stack[0];
-    }
-    
     public function isEmpty(): bool
     {
         return empty($this->stack);
@@ -66,12 +53,6 @@ class ComponentStack
     
     public function has(Component $component): bool
     {
-        foreach($this->stack as $c) {
-            if($c === $component) {
-                return true;
-            }
-        }
-        
-        return false;
+        return in_array($component, $this->stack, true);
     }
 }

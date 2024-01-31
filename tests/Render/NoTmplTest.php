@@ -5,10 +5,10 @@ namespace Stefmachine\CNoTmpl\Tests\Render;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Stefmachine\NoTmpl\Config\Config;
 use Stefmachine\NoTmpl\Exception\RenderException;
 use Stefmachine\NoTmpl\Render\NoTmpl;
 use function PHPUnit\Framework\assertSame;
+use function Stefmachine\NoTmpl\Render\render;
 
 class NoTmplTest extends TestCase
 {
@@ -85,7 +85,7 @@ class NoTmplTest extends TestCase
     /** @test */
     public function should_find_template_from_multiple_configured_directory(): void
     {
-        Config::instance()->addTemplateDirectory(__DIR__ . '/../templates/subdir');
+        NoTmpl::config()->addTemplateDirectory(__DIR__ . '/../templates/subdir');
         $result = NoTmpl::render('subdir.php');
         assertSame("<div>test</div>", self::cleanupValue($result));
     }
@@ -93,7 +93,7 @@ class NoTmplTest extends TestCase
     /** @test */
     public function should_find_template_from_alias(): void
     {
-        Config::instance()->setTemplateAlias('basic.php', 'my_alias');
+        NoTmpl::config()->setTemplateAlias('basic.php', 'my_alias');
         $result = NoTmpl::render('my_alias');
         assertSame("<div>Basic_php</div>", self::cleanupValue($result));
     }
@@ -188,5 +188,19 @@ class NoTmplTest extends TestCase
         } catch(RuntimeException) {
         }
         assertSame($expectedLevel, ob_get_level(), "Output buffer was not cleaned up properly.");
+    }
+    
+    /** @test */
+    public function should_throw_on_early_component_end(): void
+    {
+        $this->expectException(RenderException::class);
+        render('early_component_end.php');
+    }
+    
+    /** @test */
+    public function should_throw_on_early_subcomponent_end(): void
+    {
+        $this->expectException(RenderException::class);
+        render('early_subcomponent_end.php');
     }
 }

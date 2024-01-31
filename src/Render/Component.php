@@ -4,7 +4,11 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
+use Stefmachine\NoTmpl\Exception\RenderException;
 
+/**
+ * @internal
+ */
 class Component
 {
     use ConfigInjectTrait;
@@ -12,6 +16,7 @@ class Component
     private readonly SlotManager $slotManager;
     private readonly OutputBuffer $ob;
     private readonly OutputBufferStack $obStack;
+    private bool $rendering;
     
     public function __construct(
         private readonly ComponentStack $componentStack,
@@ -23,59 +28,82 @@ class Component
         $this->obStack = $obStack ?? new OutputBufferStack();
         $this->ob = new OutputBuffer($this->obStack, "component:{$this->template}");
         $this->slotManager = new SlotManager($this->obStack);
+        $this->rendering = false;
     }
     
+    /**
+     * @return $this
+     * @throws RenderException
+     */
     public function start(): static
     {
         $this->componentStack->push($this);
         $this->ob->open();
+        $this->rendering = true;
         $this->ob->includeFile(
             $this->template,
             array_merge($this->getConfig()->getRenderGlobalParams(), $this->params),
         );
+        $this->rendering = false;
+        $this->slotManager->lockCreation();
         return $this;
     }
     
-    public function isStarted(): bool
-    {
-        return $this->ob->wasOpened();
-    }
-    
+    /**
+     * @return $this
+     * @throws RenderException
+     */
     public function end(): static
     {
+        if($this->rendering) {
+            throw new RenderException("Cannot close '{$this->ob->getName()}' while it is still rendering.");
+        }
+        
         $this->ob->close();
         $this->componentStack->pop();
         
-        if($this->obStack->hasBuffer()) {
+        if(!$this->obStack->isEmpty()) {
             $this->obStack->getCurrent()->writeContent($this->getOutput());
         }
         
         return $this;
     }
     
-    public function isEnded(): bool
-    {
-        return $this->ob->isClosed();
-    }
-    
+    /**
+     * @return string
+     * @throws RenderException
+     */
     public function getOutput(): string
     {
         $output = $this->ob->getOutput();
         return $this->slotManager->processSlotContent($output);
     }
     
+    /**
+     * @param string $name
+     * @return $this
+     * @throws RenderException
+     */
     public function startSlot(string $name): static
     {
         $this->slotManager->startSlot($name);
         return $this;
     }
     
+    /**
+     * @return $this
+     * @throws RenderException
+     */
     public function renderParentSlot(): static
     {
         $this->slotManager->renderParentSlot();
         return $this;
     }
     
+    /**
+     * @return $this
+     * @throws RenderException
+     */
     public function endSlot(): static
     {
         $this->slotManager->endSlot();
@@ -92,6 +120,10 @@ class Component
         );
     }
     
+    /**
+     * @return $this
+     * @throws RenderException
+     */
     public function cleanUp(): static
     {
         if($this->ob->isOpen()) {

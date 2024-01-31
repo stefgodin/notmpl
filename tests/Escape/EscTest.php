@@ -6,6 +6,10 @@ namespace Stefmachine\NoTmpl\Tests\Escape;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Stefmachine\NoTmpl\Escape\Esc;
+use function Stefmachine\NoTmpl\Escape\esc_css;
+use function Stefmachine\NoTmpl\Escape\esc_html;
+use function Stefmachine\NoTmpl\Escape\esc_html_attr;
+use function Stefmachine\NoTmpl\Escape\esc_js;
 
 class EscTest extends TestCase
 {
@@ -20,10 +24,10 @@ class EscTest extends TestCase
         ];
         
         foreach($nonStringable as $type => $value) {
-            self::assertSame('', Esc::html($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::html");
-            self::assertSame('', Esc::htmlAttr($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::htmlAttr");
-            self::assertSame('', Esc::js($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::js");
-            self::assertSame('', Esc::css($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::css");
+            self::assertSame('', esc_html($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::html");
+            self::assertSame('', esc_html_attr($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::htmlAttr");
+            self::assertSame('', esc_js($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::js");
+            self::assertSame('', esc_css($value), "Expected non-stringable '{$type}' to return empty string from " . Esc::class . "::css");
         }
     }
     
@@ -46,10 +50,10 @@ class EscTest extends TestCase
         ];
         
         foreach($tests as $name => [$value, $expected]) {
-            self::assertSame($expected, Esc::html($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::html");
-            self::assertSame($expected, Esc::htmlAttr($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::htmlAttr");
-            self::assertSame($expected, Esc::js($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::js");
-            self::assertSame($expected, Esc::css($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::css");
+            self::assertSame($expected, esc_html($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::html");
+            self::assertSame($expected, esc_html_attr($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::htmlAttr");
+            self::assertSame($expected, esc_js($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::js");
+            self::assertSame($expected, esc_css($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::css");
         }
     }
 }

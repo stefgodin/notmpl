@@ -10,6 +10,7 @@ namespace Stefmachine\NoTmpl\Render;
  * @param array $parameters - The parameters to be passed to the template
  * @return string
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function render(string $template, array $parameters = []): string
 {
@@ -23,6 +24,7 @@ function render(string $template, array $parameters = []): string
  * @param array $parameters - Specified additional parameters
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function component(string $template, array $parameters = []): void
 {
@@ -34,6 +36,7 @@ function component(string $template, array $parameters = []): void
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function end_component(): void
 {
@@ -46,6 +49,7 @@ function end_component(): void
  * @param string $name - The slot name
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function slot(string $name): void
 {
@@ -57,6 +61,7 @@ function slot(string $name): void
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function parent_slot(): void
 {
@@ -68,6 +73,7 @@ function parent_slot(): void
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function end_slot(): void
 {

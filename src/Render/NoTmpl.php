@@ -4,7 +4,6 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Config\Config;
-use Stefmachine\NoTmpl\Exception\RenderException;
 use Throwable;
 
 /**
@@ -29,12 +28,14 @@ class NoTmpl
      * @param array $parameters - The parameters to be passed to the template
      * @return string
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpDocMissingThrowsInspection
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function render(string $template, array $parameters = []): string
     {
         $component = new Component(
             ComponentStack::instance(),
-            TemplateFinder::instance()->findTemplate($template),
+            TemplateResolver::instance()->resolve($template),
             $parameters
         );
         
@@ -55,12 +56,13 @@ class NoTmpl
      * @param array $parameters - Specified additional parameters
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function component(string $template, array $parameters = []): void
     {
         ComponentStack::instance()->getCurrent()
             ->component(
-                TemplateFinder::instance()->findTemplate($template),
+                TemplateResolver::instance()->resolve($template),
                 $parameters,
             )->start();
     }
@@ -69,16 +71,12 @@ class NoTmpl
      * Ends the last subcomponent block
      *
      * @return void
-     * @throws RenderException
+     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function endComponent(): void
     {
-        $current = ComponentStack::instance()->getCurrent();
-        if(ComponentStack::instance()->getMain() === $current) {
-            throw new RenderException("No more sub component to end.");
-        }
-        
-        $current->end();
+        ComponentStack::instance()->getCurrent()->end();
     }
     
     /**
@@ -88,6 +86,7 @@ class NoTmpl
      * @param string $name
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function slot(string $name): void
     {
@@ -99,6 +98,7 @@ class NoTmpl
      *
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function parentSlot(): void
     {
@@ -110,6 +110,7 @@ class NoTmpl
      *
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function endSlot(): void
     {

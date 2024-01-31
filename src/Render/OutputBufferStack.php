@@ -5,6 +5,9 @@ namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Exception\RenderException;
 
+/**
+ * @internal
+ */
 class OutputBufferStack
 {
     /** @var OutputBuffer[] */
@@ -33,28 +36,15 @@ class OutputBufferStack
      */
     public function getCurrent(): OutputBuffer
     {
-        if(!$this->hasBuffer()) {
+        if($this->isEmpty()) {
             throw new RenderException("There is no current output buffer.");
         }
         
         return $this->stack[count($this->stack) - 1];
     }
     
-    /**
-     * @return OutputBuffer
-     * @throws RenderException
-     */
-    public function getMain(): OutputBuffer
+    public function isEmpty(): bool
     {
-        if(!$this->hasBuffer()) {
-            throw new RenderException("There is no main output buffer.");
-        }
-        
-        return $this->stack[0];
-    }
-    
-    public function hasBuffer(): bool
-    {
-        return !empty($this->stack);
+        return empty($this->stack);
     }
 }

@@ -7,12 +7,20 @@ use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
 use Stefmachine\NoTmpl\Exception\RenderException;
 use Stefmachine\NoTmpl\Singleton\SingletonTrait;
 
-class TemplateFinder
+/**
+ * @internal
+ */
+class TemplateResolver
 {
     use SingletonTrait;
     use ConfigInjectTrait;
     
-    public function findTemplate(string $template): string
+    /**
+     * @param string $template
+     * @return string
+     * @throws RenderException
+     */
+    public function resolve(string $template): string
     {
         $filenames = array_unique([
             $this->getConfig()->getTemplateAliases()[$template] ?? $template,
@@ -35,6 +43,6 @@ class TemplateFinder
             }
         }
         
-        throw new RenderException(sprintf("Could not find template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)));
+        throw new RenderException(sprintf("Could not resolve template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)));
     }
 }

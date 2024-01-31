@@ -5,16 +5,21 @@ namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Exception\RenderException;
 
+/**
+ * @internal
+ */
 class SlotManager
 {
     /** @var Slot[] */
     private array $slots;
+    private bool $creationLocked;
     
     public function __construct(
         private readonly OutputBufferStack $obStack,
     )
     {
         $this->slots = [];
+        $this->creationLocked = false;
     }
     
     /**
@@ -26,13 +31,15 @@ class SlotManager
     {
         $slot = new Slot($this->obStack, $name);
         $oldSlot = $this->getFirstSlotWithName($name);
-        if($oldSlot) {
-            if(!$oldSlot->isEnded()) {
-                throw new RenderException("Cannot overwrite non-ended slot '{$name}' within '{$this->obStack->getCurrent()->getName()}'.");
+        if($oldSlot && !$oldSlot->isEnded()) {
+            throw new RenderException("Cannot overwrite non-ended slot '{$name}' within '{$this->obStack->getCurrent()->getName()}'.");
+        }
+        
+        if(!$oldSlot) {
+            if($this->creationLocked) {
+                throw new RenderException("Cannot overwrite non-existent slot '{$name}'.");
             }
             
-            $oldSlot->replaceWith($slot);
-        } else {
             $this->obStack->getCurrent()->writeContent($slot->getMarkup());
         }
         
@@ -74,6 +81,11 @@ class SlotManager
         $openSlot->end();
     }
     
+    /**
+     * @param string $output
+     * @return string
+     * @throws RenderException
+     */
     public function processSlotContent(string $output): string
     {
         $slotContent = array_combine(
@@ -89,6 +101,21 @@ class SlotManager
         } while($outputChanged);
         
         return $output;
+    }
+    
+    /**
+     * @return $this
+     * @throws RenderException
+     */
+    public function lockCreation(): static
+    {
+        foreach($this->slots as $slot) {
+            if(!$slot->isEnded()) {
+                throw new RenderException("Cannot lock slot creation while some slots are still opened.");
+            }
+        }
+        $this->creationLocked = true;
+        return $this;
     }
     
     private function getFirstSlotWithName(string $name): Slot|null
