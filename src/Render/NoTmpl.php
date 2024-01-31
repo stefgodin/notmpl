@@ -51,7 +51,7 @@ class NoTmpl
      * Starts a subcomponent block and loads a specific template for it.
      * Slots of the subcomponent are not shared with the parent component which allows reuse of names.
      *
-     * @param string $template - The embedded template to render
+     * @param string $template - The subcomponent to render
      * @param array $parameters - Specified additional parameters
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException

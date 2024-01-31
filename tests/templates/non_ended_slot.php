@@ -1,5 +1,5 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\slot;
 
-NoTmpl::slot('my_slot');
+slot('my_slot');

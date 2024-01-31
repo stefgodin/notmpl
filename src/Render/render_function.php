@@ -4,7 +4,7 @@
 namespace Stefmachine\NoTmpl\Render;
 
 /**
- * Proxies {@see NoTmpl::render()}
+ * Proxies {@see NoTmpl::render}
  *
  * @param string $template - The template to render
  * @param array $parameters - The parameters to be passed to the template
@@ -17,33 +17,31 @@ function render(string $template, array $parameters = []): string
 }
 
 /**
- * Proxies {@see NoTmpl::embed()}
+ * Proxies {@see NoTmpl::component}
  *
- * @param string $template - The embedded template to render
+ * @param string $template - The subcomponent to render
  * @param array $parameters - Specified additional parameters
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function embed(string $template, array $parameters = []): void
+function component(string $template, array $parameters = []): void
 {
-    NoTmpl::embed($template, $parameters);
+    NoTmpl::component($template, $parameters);
 }
 
 /**
- * Proxies {@see NoTmpl::merge()}
+ * Proxies {@see NoTmpl::endComponent}
  *
- * @param string $template - The merged template to render
- * @param array $parameters - Specified additional parameters
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  */
-function merge(string $template, array $parameters = []): void
+function end_component(): void
 {
-    NoTmpl::merge($template, $parameters);
+    NoTmpl::endComponent();
 }
 
 /**
- * Proxies {@see NoTmpl::slot()}
+ * Proxies {@see NoTmpl::slot}
  *
  * @param string $name - The slot name
  * @return void
@@ -55,7 +53,7 @@ function slot(string $name): void
 }
 
 /**
- * Proxies {@see NoTmpl::parentSlot()}
+ * Proxies {@see NoTmpl::parentSlot}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
@@ -66,7 +64,7 @@ function parent_slot(): void
 }
 
 /**
- * Proxies {@see NoTmpl::endSlot()}
+ * Proxies {@see NoTmpl::endSlot}
  *
  * @return void
  * @throws \Stefmachine\NoTmpl\Exception\RenderException

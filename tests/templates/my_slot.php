@@ -1,10 +1,11 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\end_slot;
+use function Stefmachine\NoTmpl\Render\slot;
 
 /** @formatter:off */
 
 ?>
-<?php NoTmpl::slot('my_slot') ?>
+<?php slot('my_slot') ?>
   <div>my_slot</div>
-<?php NoTmpl::endSlot() ?>
+<?php end_slot() ?>

@@ -1,5 +1,5 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\component;
 
-NoTmpl::component("_missing_component.php");
+component("_missing_component.php");

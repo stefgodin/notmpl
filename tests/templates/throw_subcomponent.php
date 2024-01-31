@@ -1,7 +1,7 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\component;
 
 /** @formatter:off */
 ?>
-<?php NoTmpl::component('throw.php') ?>
+<?php component('throw.php') ?>

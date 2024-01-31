@@ -99,6 +99,13 @@ class NoTmplTest extends TestCase
     }
     
     /** @test */
+    public function should_render_parent_slot_of_component(): void
+    {
+        $result = NoTmpl::render('parent_slot.php');
+        assertSame("<div>before</div><div>my_slot</div><div>after</div>", self::cleanupValue($result));
+    }
+    
+    /** @test */
     public function should_throw_on_missing_template(): void
     {
         $this->expectException(RenderException::class);

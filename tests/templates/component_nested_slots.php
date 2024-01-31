@@ -1,12 +1,15 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\component;
+use function Stefmachine\NoTmpl\Render\end_component;
+use function Stefmachine\NoTmpl\Render\end_slot;
+use function Stefmachine\NoTmpl\Render\slot;
 
 /** @formatter:off */
 
 ?>
-<?php NoTmpl::component('component_nested_slots_component.php') ?>
-  <?php NoTmpl::slot('my_nested_slot') ?>
+<?php component('component_nested_slots_component.php') ?>
+  <?php slot('my_nested_slot') ?>
     <div>overwritten</div>
-  <?php NoTmpl::endSlot() ?>
-<?php NoTmpl::endComponent() ?>
+  <?php end_slot() ?>
+<?php end_component() ?>

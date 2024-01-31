@@ -1,5 +1,5 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\component;
 
-NoTmpl::component('basic.php');
+component('basic.php');

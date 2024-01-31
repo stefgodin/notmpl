@@ -1,8 +1,8 @@
 <?php
 
-use Stefmachine\NoTmpl\Render\NoTmpl;
+use function Stefmachine\NoTmpl\Render\slot;
 
 /** @formatter:off */
 ?>
-<?php NoTmpl::slot('my_slot') ?>
+<?php slot('my_slot') ?>
 <?php throw new RuntimeException('An exception') ?>
