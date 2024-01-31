@@ -6,6 +6,7 @@ namespace Stefmachine\NoTmpl\Tests\Escape;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Stefmachine\NoTmpl\Escape\Esc;
+use Stefmachine\NoTmpl\Render\NoTmpl;
 use function Stefmachine\NoTmpl\Escape\esc_css;
 use function Stefmachine\NoTmpl\Escape\esc_html;
 use function Stefmachine\NoTmpl\Escape\esc_html_attr;
@@ -13,6 +14,11 @@ use function Stefmachine\NoTmpl\Escape\esc_js;
 
 class EscTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        NoTmpl::config()->setEscaperEncoding('utf-8');
+    }
+    
     /** @test */
     public function should_return_empty_string_when_given_non_stringable(): void
     {

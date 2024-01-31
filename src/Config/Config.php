@@ -51,7 +51,7 @@ class Config
     public function addTemplateDirectory(string $directory): static
     {
         if(!in_array($directory, $this->templateDirectories)) {
-            $this->templateDirectories[] = $directory;
+            $this->templateDirectories[] = rtrim($directory, '/\\');
         }
         
         return $this;
@@ -60,7 +60,6 @@ class Config
     public function addTemplateDirectories(array $directories): static
     {
         foreach($directories as $directory) {
-            $directory = rtrim($directory, '/\\');
             $this->addTemplateDirectory($directory);
         }
         
@@ -69,7 +68,8 @@ class Config
     
     public function setTemplateDirectories(array $directories): static
     {
-        $this->templateDirectories = $directories;
+        $this->templateDirectories = [];
+        $this->addTemplateDirectories($directories);
         return $this;
     }
     
@@ -86,7 +86,10 @@ class Config
     
     public function setTemplateAliases(array $templateAliases): static
     {
-        $this->templateAliases = $templateAliases;
+        $this->templateAliases = [];
+        foreach($templateAliases as $alias => $template) {
+            $this->setTemplateAlias($template, $alias);
+        }
         return $this;
     }
     

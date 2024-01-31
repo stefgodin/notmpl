@@ -15,7 +15,7 @@ class NoTmplTest extends TestCase
     protected function setUp(): void
     {
         NoTmpl::config()
-            ->addTemplateDirectory(__DIR__ . '/../templates');
+            ->setTemplateDirectories([__DIR__ . '/../templates']);
     }
     
     private static function cleanupValue(string $value): string
@@ -40,6 +40,22 @@ class NoTmplTest extends TestCase
     /** @test */
     public function should_render_php_variables(): void
     {
+        $result = NoTmpl::render('basic_variables.php', [
+            'testVar' => 'test',
+            'otherTestVar' => 'test2',
+        ]);
+        assertSame("<div>test</div><div>test2</div>", self::cleanupValue($result));
+    }
+    
+    /** @test */
+    public function should_render_global_php_variables(): void
+    {
+        NoTmpl::config()
+            ->setRenderGlobalParams([
+                'testVar' => 'test',
+                'otherTestVar' => 'test2',
+            ])
+            ->addRenderGlobalParams(['testVar' => 'test']);
         $result = NoTmpl::render('basic_variables.php', [
             'testVar' => 'test',
             'otherTestVar' => 'test2',
@@ -93,7 +109,7 @@ class NoTmplTest extends TestCase
     /** @test */
     public function should_find_template_from_alias(): void
     {
-        NoTmpl::config()->setTemplateAlias('basic.php', 'my_alias');
+        NoTmpl::config()->setTemplateAliases(['my_alias' => 'basic.php']);
         $result = NoTmpl::render('my_alias');
         assertSame("<div>Basic_php</div>", self::cleanupValue($result));
     }
