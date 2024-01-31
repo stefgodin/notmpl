@@ -2,4 +2,4 @@
 
 use Stefmachine\NoTmpl\Render\NoTmpl;
 
-NoTmpl::slot('my_slot');
+NoTmpl::component("_missing_component.php");

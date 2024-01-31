@@ -24,7 +24,7 @@ class Slot
         $this->id = uniqid("{$name}_");
         $this->replacedBySlot = null;
         $this->replacingSlot = null;
-        $this->ob = OutputBuffer::create("slot:{$this->name}-{$this->id}");
+        $this->ob = new OutputBuffer($this->obStack, "slot:{$this->name}-{$this->id}");
     }
     
     public function getMarkup(): string
@@ -48,7 +48,6 @@ class Slot
      */
     public function start(): static
     {
-        $this->obStack->push($this->ob);
         $this->ob->open();
         return $this;
     }
@@ -76,17 +75,18 @@ class Slot
         return $this->isReplacing() ? $this->replacingSlot->getParentOutput() : $this->ob->getOutput();
     }
     
+    public function getOriginalOutput(): string
+    {
+        return $this->ob->getOutput();
+    }
+    
     /**
      * @return $this
      * @throws RenderException
      */
     public function end(): static
     {
-        if($this->obStack->getCurrent() !== $this->ob) {
-            throw new RenderException("Cannot close slot '{$this->ob->getName()}' when it is not the current output buffer.");
-        }
         $this->ob->close();
-        $this->obStack->pop();
         return $this;
     }
     

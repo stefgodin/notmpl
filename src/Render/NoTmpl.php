@@ -4,6 +4,8 @@
 namespace Stefmachine\NoTmpl\Render;
 
 use Stefmachine\NoTmpl\Config\Config;
+use Stefmachine\NoTmpl\Exception\RenderException;
+use Throwable;
 
 /**
  * Static object class to regroup all rendering functions of the NoTmpl library
@@ -30,39 +32,53 @@ class NoTmpl
      */
     public static function render(string $template, array $parameters = []): string
     {
-        $context = new RenderContext(
-            RenderContextStack::instance(),
+        $component = new Component(
+            ComponentStack::instance(),
+            TemplateFinder::instance()->findTemplate($template),
             $parameters
         );
-        return $context->render($template);
+        
+        try {
+            return $component->start()->end()->getOutput();
+        } catch(Throwable $ex) {
+            $component->cleanUp();
+            /** @noinspection PhpUnhandledExceptionInspection */
+            throw $ex; // Forwarding errors
+        }
     }
     
     /**
-     * Starts a new separate render context to embed a template into the current render context.
-     * Slots of the sub template are not shared and cannot be extended.
+     * Starts a subcomponent block and loads a specific template for it.
+     * Slots of the subcomponent are not shared with the parent component which allows reuse of names.
      *
      * @param string $template - The embedded template to render
      * @param array $parameters - Specified additional parameters
      * @return void
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      */
-    public static function embed(string $template, array $parameters = []): void
+    public static function component(string $template, array $parameters = []): void
     {
-        RenderContextStack::instance()->getCurrentContext()->embed($template, $parameters);
+        ComponentStack::instance()->getCurrent()
+            ->component(
+                TemplateFinder::instance()->findTemplate($template),
+                $parameters,
+            )->start();
     }
     
     /**
-     * Starts a render context within the current render context.
-     * Slots of the merged template are shared and can be overwritten.
+     * Ends the last subcomponent block
      *
-     * @param string $template - The merged template to render
-     * @param array $parameters - Specified additional parameters
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      */
-    public static function merge(string $template, array $parameters = []): void
+    public static function endComponent(): void
     {
-        RenderContextStack::instance()->getCurrentContext()->merge($template, $parameters);
+        $current = ComponentStack::instance()->getCurrent();
+        if(ComponentStack::instance()->getMain() === $current) {
+            throw new RenderException("No more sub component to end.");
+        }
+        
+        $current->end();
     }
     
     /**
@@ -75,7 +91,7 @@ class NoTmpl
      */
     public static function slot(string $name): void
     {
-        RenderContextStack::instance()->getCurrentContext()->startSlot($name);
+        ComponentStack::instance()->getCurrent()->startSlot($name);
     }
     
     /**
@@ -86,7 +102,7 @@ class NoTmpl
      */
     public static function parentSlot(): void
     {
-        RenderContextStack::instance()->getCurrentContext()->renderParentSlot();
+        ComponentStack::instance()->getCurrent()->renderParentSlot();
     }
     
     /**
@@ -97,6 +113,6 @@ class NoTmpl
      */
     public static function endSlot(): void
     {
-        RenderContextStack::instance()->getCurrentContext()->endSlot();
+        ComponentStack::instance()->getCurrent()->endSlot();
     }
 }

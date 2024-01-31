@@ -11,18 +11,19 @@ use Stefmachine\NoTmpl\Exception\RenderException;
 class OutputBuffer
 {
     /** @var OutputBuffer[] */
-    private static array $stack = [];
+    private static array $allBuffers = [];
     
-    private static function getCurrentContextName(): string
+    private static function getCurrentLevelName(): string
     {
-        return (self::$stack[ob_get_level()] ?? null)?->getName() ?? 'unknown';
+        return (self::$allBuffers[ob_get_level()] ?? null)?->getName() ?? 'unknown';
     }
     
     private string|null $output;
     private int|null $level;
     
     public function __construct(
-        private readonly string $name,
+        private readonly OutputBufferStack $stack,
+        private readonly string            $name,
     )
     {
         $this->output = null;
@@ -32,11 +33,6 @@ class OutputBuffer
     public function getName(): string
     {
         return $this->name;
-    }
-    
-    public static function create(string $name): OutputBuffer
-    {
-        return new OutputBuffer($name);
     }
     
     /**
@@ -51,11 +47,13 @@ class OutputBuffer
         
         ob_start(function(string $buffer) {
             $this->output = $buffer;
-            unset(self::$stack[$this->level]);
+            $this->stack->pop();
+            unset(self::$allBuffers[$this->level]);
             return "";
         });
         $this->level = ob_get_level();
-        self::$stack[$this->level] = $this;
+        $this->stack->push($this);
+        self::$allBuffers[$this->level] = $this;
         return $this;
     }
     
@@ -89,7 +87,7 @@ class OutputBuffer
         }
         
         if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentContextName();
+            $higherContextName = self::getCurrentLevelName();
             throw new RenderException("The output buffer '{$this->name}' cannot be closed before non-closed output buffer '{$higherContextName}'.");
         }
         
@@ -105,7 +103,7 @@ class OutputBuffer
     {
         while($this->level !== null && ob_get_level() >= $this->level && ob_get_level() > 0) {
             if(ob_end_clean() === false && ob_end_flush() === false) {
-                $higherContextName = self::getCurrentContextName();
+                $higherContextName = self::getCurrentLevelName();
                 throw new RenderException("Failing to forcefully close output buffer '{$this->name}' because '{$higherContextName}' context prevents closing.");
             }
         }
@@ -142,7 +140,7 @@ class OutputBuffer
         }
         
         if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentContextName();
+            $higherContextName = self::getCurrentLevelName();
             throw new RenderException("Cannot write content into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
         }
         
@@ -163,7 +161,7 @@ class OutputBuffer
         }
         
         if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentContextName();
+            $higherContextName = self::getCurrentLevelName();
             throw new RenderException("Cannot include file into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.");
         }
         

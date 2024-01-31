@@ -6,5 +6,9 @@ use Stefmachine\NoTmpl\Render\NoTmpl;
 
 ?>
 <?php NoTmpl::slot('my_slot') ?>
-  <div>my_slot</div>
+  <div>no</div>
+<?php NoTmpl::endSlot() ?>
+
+<?php NoTmpl::slot('my_slot') ?>
+  <div>test</div>
 <?php NoTmpl::endSlot() ?>

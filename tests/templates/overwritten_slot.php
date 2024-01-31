@@ -7,7 +7,7 @@ use function Stefmachine\NoTmpl\Render\slot;
 
 ?>
 <?php slot('my_slot') ?>
-  <div>Invalid content</div>
+  <div>no</div>
 <?php end_slot() ?>
 
 <?php slot('my_slot') ?>

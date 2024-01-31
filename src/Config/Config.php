@@ -12,12 +12,14 @@ class Config
     
     private array $renderGlobalParams;
     private array $templateDirectories;
+    private array $templateAliases;
     private string|null $escaperEncoding;
     
     public function __construct()
     {
         $this->renderGlobalParams = [];
         $this->templateDirectories = [];
+        $this->templateAliases = [];
         $this->escaperEncoding = null;
     }
     
@@ -74,6 +76,23 @@ class Config
     public function getTemplateDirectories(): array
     {
         return $this->templateDirectories;
+    }
+    
+    public function setTemplateAlias(string $template, string $alias): static
+    {
+        $this->templateAliases[$alias] = $template;
+        return $this;
+    }
+    
+    public function setTemplateAliases(array $templateAliases): static
+    {
+        $this->templateAliases = $templateAliases;
+        return $this;
+    }
+    
+    public function getTemplateAliases(): array
+    {
+        return $this->templateAliases;
     }
     
     public function setEscaperEncoding(string|null $_encoding): static
