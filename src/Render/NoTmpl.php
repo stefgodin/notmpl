@@ -58,13 +58,14 @@ class NoTmpl
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
-    public static function component(string $template, array $parameters = []): void
+    public static function component(string $template, array $parameters = []): TagEnder
     {
         ComponentStack::instance()->getCurrent()
             ->component(
                 TemplateResolver::instance()->resolve($template),
                 $parameters,
             )->start();
+        return new TagEnder(self::endComponent(...));
     }
     
     /**
@@ -88,9 +89,10 @@ class NoTmpl
      * @throws \Stefmachine\NoTmpl\Exception\RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
-    public static function slot(string $name): void
+    public static function slot(string $name): TagEnder
     {
         ComponentStack::instance()->getCurrent()->startSlot($name);
+        return new TagEnder(self::endSlot(...));
     }
     
     /**

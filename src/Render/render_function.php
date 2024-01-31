@@ -22,13 +22,13 @@ function render(string $template, array $parameters = []): string
  *
  * @param string $template - The subcomponent to render
  * @param array $parameters - Specified additional parameters
- * @return void
+ * @return TagEnder
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function component(string $template, array $parameters = []): void
+function component(string $template, array $parameters = []): TagEnder
 {
-    NoTmpl::component($template, $parameters);
+    return NoTmpl::component($template, $parameters);
 }
 
 /**
@@ -47,13 +47,13 @@ function end_component(): void
  * Proxies {@see NoTmpl::slot}
  *
  * @param string $name - The slot name
- * @return void
+ * @return TagEnder
  * @throws \Stefmachine\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function slot(string $name): void
+function slot(string $name): TagEnder
 {
-    NoTmpl::slot($name);
+    return NoTmpl::slot($name);
 }
 
 /**

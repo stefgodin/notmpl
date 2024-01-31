@@ -231,4 +231,24 @@ class NoTmplTest extends TestCase
         $this->expectExceptionCode(RenderError::CMP_INVALID_STATE->value);
         render('early_subcomponent_end.php');
     }
+    
+    /** @test */
+    public function should_render_menu_component(): void
+    {
+        NoTmpl::config()
+            ->setTemplateAlias('menu_component/menu.php', 'menu')
+            ->setTemplateAlias('menu_component/menu_item.php', 'menu-item')
+            ->setTemplateAlias('menu_component/menu_title.php', 'menu-title');
+        
+        $items = [
+            'a',
+            'b',
+            'c',
+            'd',
+        ];
+        
+        $result = render('menu_component/menu_integration.php', ['items' => $items]);
+        $expected = '<div><h1>menu-title</h1><h3>custom-menu-title</h3><ul><li>a</li><li>b</li><li>c</li><li>d</li></ul></div>';
+        assertSame($expected, self::cleanupValue($result));
+    }
 }
