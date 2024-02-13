@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Render;
 
 /**
  * @internal

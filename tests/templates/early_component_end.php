@@ -1,5 +1,5 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\end_component;
+use function StefGodin\NoTmpl\Render\component_end;
 
-end_component();
+component_end();

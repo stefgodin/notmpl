@@ -1,11 +1,11 @@
 {
-  "name": "stefmachine/notmpl",
+  "name": "stefgodin/notmpl",
   "description": "Ultra lightweight PHP template engine leveraging PHP raw HTML rendering.",
   "type": "library",
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Stefmachine\\NoTmpl\\": "src/"
+      "StefGodin\\NoTmpl\\": "src/"
     },
     "files": [
       "src/Render/render_function.php",
@@ -14,7 +14,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Stefmachine\\Validation\\Tests\\": "tests/"
+      "StefGodin\\NoTmpl\\Tests\\": "tests/"
     }
   },
   "require": {

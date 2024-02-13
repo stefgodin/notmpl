@@ -1,35 +1,15 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Escape;
+namespace StefGodin\NoTmpl\Escape;
 
 use Laminas\Escaper\Escaper as LaminasEscaper;
-use Laminas\Escaper\Exception\ExceptionInterface as LaminasExceptionInterface;
-use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
-use Stefmachine\NoTmpl\Exception\EscapeException;
-use Stefmachine\NoTmpl\Singleton\SingletonTrait;
+use StefGodin\NoTmpl\Singleton\SingletonTrait;
 use Stringable;
 
-/**
- * Escape class that proxies and regroups the {@see LaminasEscaper} methods
- */
 class Esc
 {
     use SingletonTrait;
-    use ConfigInjectTrait;
-    
-    private LaminasEscaper $escaper;
-    
-    private function __construct() {}
-    
-    /**
-     * @return LaminasEscaper
-     * @throws LaminasExceptionInterface
-     */
-    private function getEscaper(): LaminasEscaper
-    {
-        return $this->escaper ??= new LaminasEscaper($this->getConfig()->getEscaperEncoding());
-    }
     
     private static function stringify(mixed $value): string
     {
@@ -45,62 +25,9 @@ class Esc
      *
      * @param mixed $value
      * @return string
-     * @throws EscapeException
      */
     public static function html(mixed $value): string
     {
-        try {
-            return self::instance()->getEscaper()->escapeHtml(self::stringify($value));
-        } catch(LaminasExceptionInterface $ex) {
-            throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
-        }
-    }
-    
-    /**
-     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeHtmlAttr}
-     *
-     * @param mixed $value
-     * @return string
-     * @throws EscapeException
-     */
-    public static function htmlAttr(mixed $value): string
-    {
-        try {
-            return self::instance()->getEscaper()->escapeHtmlAttr(self::stringify($value));
-        } catch(LaminasExceptionInterface $ex) {
-            throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
-        }
-    }
-    
-    /**
-     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeJs}
-     *
-     * @param mixed $value
-     * @return string
-     * @throws EscapeException
-     */
-    public static function js(mixed $value): string
-    {
-        try {
-            return self::instance()->getEscaper()->escapeJs(self::stringify($value));
-        } catch(LaminasExceptionInterface $ex) {
-            throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
-        }
-    }
-    
-    /**
-     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeCss}
-     *
-     * @param mixed $value
-     * @return string
-     * @throws EscapeException
-     */
-    public static function css(mixed $value): string
-    {
-        try {
-            return self::instance()->getEscaper()->escapeCss(self::stringify($value));
-        } catch(LaminasExceptionInterface $ex) {
-            throw new EscapeException($ex->getMessage(), $ex->getCode(), $ex);
-        }
+        return htmlspecialchars(self::stringify($value), ENT_QUOTES | ENT_SUBSTITUTE);
     }
 }

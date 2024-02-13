@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Singleton;
+namespace StefGodin\NoTmpl\Singleton;
 
 /**
  * @internal

@@ -1,20 +1,20 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Render;
 
-use Stefmachine\NoTmpl\Config\ConfigInjectTrait;
-use Stefmachine\NoTmpl\Exception\RenderError;
-use Stefmachine\NoTmpl\Exception\RenderException;
-use Stefmachine\NoTmpl\Singleton\SingletonTrait;
+use StefGodin\NoTmpl\Exception\RenderError;
+use StefGodin\NoTmpl\Exception\RenderException;
 
 /**
  * @internal
  */
 class TemplateResolver
 {
-    use SingletonTrait;
-    use ConfigInjectTrait;
+    public function __construct(
+        private readonly array $directories,
+        private readonly array $aliases,
+    ) {}
     
     /**
      * @param string $template
@@ -24,7 +24,7 @@ class TemplateResolver
     public function resolve(string $template): string
     {
         $filenames = array_unique([
-            $this->getConfig()->getTemplateAliases()[$template] ?? $template,
+            $this->aliases[$template] ?? $template,
             $template,
         ]);
         
@@ -35,7 +35,7 @@ class TemplateResolver
             }
             $checkedPaths[] = '"' . $filename . '"';
             
-            foreach($this->getConfig()->getTemplateDirectories() as $dir) {
+            foreach($this->directories as $dir) {
                 $file = $dir . DIRECTORY_SEPARATOR . $filename;
                 if(file_exists($file)) {
                     return $file;

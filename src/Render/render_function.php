@@ -1,66 +1,77 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Render;
-
-/**
- * Proxies {@see NoTmpl::render}
- *
- * @param string $template - The template to render
- * @param array $parameters - The parameters to be passed to the template
- * @return string
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
- * @noinspection PhpFullyQualifiedNameUsageInspection
- */
-function render(string $template, array $parameters = []): string
-{
-    return NoTmpl::render($template, $parameters);
-}
+namespace StefGodin\NoTmpl\Render;
 
 /**
  * Proxies {@see NoTmpl::component}
  *
- * @param string $template - The subcomponent to render
+ * @param string $name - The component to render
  * @param array $parameters - Specified additional parameters
- * @return TagEnder
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @return void
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function component(string $template, array $parameters = []): TagEnder
+function component(string $name, array $parameters = []): void
 {
-    return NoTmpl::component($template, $parameters);
+    NoTmpl::component($name, $parameters);
 }
 
 /**
- * Proxies {@see NoTmpl::endComponent}
+ * Proxies {@see NoTmpl::componentEnd}
  *
  * @return void
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function end_component(): void
+function component_end(): void
 {
-    NoTmpl::endComponent();
+    NoTmpl::componentEnd();
 }
 
 /**
  * Proxies {@see NoTmpl::slot}
  *
  * @param string $name - The slot name
- * @return TagEnder
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @return void
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function slot(string $name): TagEnder
+function slot(string $name = 'default'): void
 {
-    return NoTmpl::slot($name);
+    NoTmpl::slot($name);
+}
+
+/**
+ * Proxies {@see NoTmpl::slotEnd}
+ *
+ * @return void
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
+ */
+function slot_end(): void
+{
+    NoTmpl::slotEnd();
+}
+
+/**
+ * Proxies {@see NoTmpl::slot}
+ *
+ * @param string $name - The slot name
+ * @return void
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @noinspection PhpFullyQualifiedNameUsageInspection
+ */
+function use_slot(string $name): void
+{
+    NoTmpl::useSlot($name);
 }
 
 /**
  * Proxies {@see NoTmpl::parentSlot}
  *
  * @return void
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function parent_slot(): void
@@ -69,13 +80,13 @@ function parent_slot(): void
 }
 
 /**
- * Proxies {@see NoTmpl::endSlot}
+ * Proxies {@see NoTmpl::slotEnd}
  *
  * @return void
- * @throws \Stefmachine\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Exception\RenderException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function end_slot(): void
+function use_slot_end(): void
 {
-    NoTmpl::endSlot();
+    NoTmpl::useSlotEnd();
 }

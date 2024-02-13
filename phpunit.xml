@@ -4,10 +4,10 @@
          verbose="true"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="stefmachine/notmpl/render test suite">
+        <testsuite name="StefGodin/notmpl/render test suite">
             <directory>tests/Render</directory>
         </testsuite>
-        <testsuite name="stefmachine/notmpl/escape test suite">
+        <testsuite name="StefGodin/notmpl/escape test suite">
             <directory>tests/Escape</directory>
         </testsuite>
     </testsuites>

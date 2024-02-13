@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Exception;
+namespace StefGodin\NoTmpl\Exception;
 
 use Exception;
 

@@ -1,10 +1,10 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\component;
-use function Stefmachine\NoTmpl\Render\end_component;
-use function Stefmachine\NoTmpl\Render\end_slot;
-use function Stefmachine\NoTmpl\Render\parent_slot;
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\component;
+use function StefGodin\NoTmpl\Render\component_end;
+use function StefGodin\NoTmpl\Render\parent_slot;
+use function StefGodin\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot_end;
 
 /** @formatter:off **/
 
@@ -15,5 +15,5 @@ use function Stefmachine\NoTmpl\Render\slot;
         <div>before</div>
         <?php parent_slot() ?>
         <div>after</div>
-    <?php end_slot() ?>
-<?php end_component() ?>
+    <?php slot_end() ?>
+<?php component_end() ?>

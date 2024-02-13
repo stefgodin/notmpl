@@ -1,21 +1,16 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Exception;
+namespace StefGodin\NoTmpl\Exception;
 
 enum RenderError: int
 {
-    case CMP_INVALID_STATE = 1;
-    
-    case CMPSTACK_CMP_NOT_FOUND = 51;
+    case CTX_NO_CONTEXT = 1;
+    case CTX_NO_OPEN_TAG = 2;
+    case CTX_INVALID_OPEN_TAG = 3;
+    case CTX_INVALID_NAME = 4;
     
     case OB_INVALID_STATE = 101;
-    case OB_FILE_NOT_FOUND = 102;
     
-    case OBSTACK_OB_NOT_FOUND = 151;
-    
-    case SLOTMAN_INVALID_SLOT_STATE = 201;
-    case SLOTMAN_SLOT_NOT_FOUND = 202;
-    
-    case TMPLRES_FILE_NOT_FOUND = 251;
+    case TMPLRES_FILE_NOT_FOUND = 201;
 }

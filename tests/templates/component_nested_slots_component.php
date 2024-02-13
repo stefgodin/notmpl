@@ -1,7 +1,7 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\end_slot;
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot_end;
 
 /** @formatter:off */
 
@@ -10,6 +10,6 @@ use function Stefmachine\NoTmpl\Render\slot;
   <div>before</div>
   <?php slot('my_nested_slot') ?>
     <div>nestedslot</div>
-  <?php end_slot() ?>
+  <?php slot_end() ?>
   <div>after</div>
-<?php end_slot() ?>
+<?php slot_end() ?>

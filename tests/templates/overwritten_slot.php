@@ -1,15 +1,15 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\end_slot;
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot_end;
 
 /** @formatter:off */
 
 ?>
 <?php slot('my_slot') ?>
   <div>no</div>
-<?php end_slot() ?>
+<?php slot_end() ?>
 
 <?php slot('my_slot') ?>
   <div>test</div>
-<?php end_slot() ?>
+<?php slot_end() ?>

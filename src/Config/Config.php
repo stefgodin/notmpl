@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Config;
+namespace StefGodin\NoTmpl\Config;
 
-use Stefmachine\NoTmpl\Escape\Esc;
-use Stefmachine\NoTmpl\Singleton\SingletonTrait;
+use StefGodin\NoTmpl\Escape\Esc;
+use StefGodin\NoTmpl\Singleton\SingletonTrait;
 
 class Config
 {

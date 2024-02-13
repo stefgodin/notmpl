@@ -1,18 +1,22 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Render;
 
-use Stefmachine\NoTmpl\Exception\RenderError;
-use Stefmachine\NoTmpl\Exception\RenderException;
+use StefGodin\NoTmpl\Common\TaggableTrait;
+use StefGodin\NoTmpl\Exception\RenderError;
+use StefGodin\NoTmpl\Exception\RenderException;
 
 /**
  * @internal
  */
 class OutputBuffer
 {
+    use TaggableTrait;
+    
     /** @var OutputBuffer[] */
     private static array $allBuffers = [];
+    private readonly string $id;
     
     private static function getCurrentLevelName(): string
     {
@@ -23,12 +27,17 @@ class OutputBuffer
     private int|null $level;
     
     public function __construct(
-        private readonly OutputBufferStack $stack,
-        private readonly string            $name,
+        private readonly string $name,
     )
     {
         $this->output = null;
         $this->level = null;
+        $this->id = uniqid("{$this->name}:");
+    }
+    
+    public function getId(): string
+    {
+        return $this->id;
     }
     
     public function getName(): string
@@ -51,12 +60,10 @@ class OutputBuffer
         
         ob_start(function(string $buffer) {
             $this->output = $buffer;
-            $this->stack->pop();
             unset(self::$allBuffers[$this->level]);
             return "";
         });
         $this->level = ob_get_level();
-        $this->stack->push($this);
         self::$allBuffers[$this->level] = $this;
         return $this;
     }
@@ -148,11 +155,11 @@ class OutputBuffer
     }
     
     /**
-     * @param string $content
+     * @param string|callable $content
      * @return $this
      * @throws RenderException
      */
-    public function writeContent(string $content): static
+    public function writeContent(string|callable $content): static
     {
         if(!$this->isOpen()) {
             throw new RenderException(
@@ -169,44 +176,10 @@ class OutputBuffer
             );
         }
         
-        echo $content;
-        return $this;
-    }
-    
-    /**
-     * @param string $file
-     * @param array $vars
-     * @return $this
-     * @throws RenderException
-     */
-    public function includeFile(string $file, array $vars = []): static
-    {
-        if(!$this->isOpen()) {
-            throw new RenderException(
-                "Cannot include file into closed output buffer '{$this->name}'.",
-                RenderError::OB_INVALID_STATE
-            );
-        }
-        
-        if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentLevelName();
-            throw new RenderException(
-                "Cannot include file into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.",
-                RenderError::OB_INVALID_STATE
-            );
-        }
-        
-        if(!file_exists($file)) {
-            throw new RenderException(
-                "File '{$file}' not found for rendering.",
-                RenderError::OB_FILE_NOT_FOUND
-            );
-        }
-        
-        if(pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-            IsolatedPhpRenderer::render($file, $vars);
+        if(is_string($content)) {
+            echo $content;
         } else {
-            $this->writeContent(file_get_contents($file));
+            $content($this);
         }
         
         return $this;

@@ -1,5 +1,5 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot;
 
 slot('my_slot');

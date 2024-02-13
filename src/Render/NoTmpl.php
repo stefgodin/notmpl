@@ -1,16 +1,19 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Render;
 
-use Stefmachine\NoTmpl\Config\Config;
-use Throwable;
+use StefGodin\NoTmpl\Config\Config;
+use StefGodin\NoTmpl\Exception\RenderError;
+use StefGodin\NoTmpl\Exception\RenderException;
 
 /**
  * Static object class to regroup all rendering functions of the NoTmpl library
  */
 class NoTmpl
 {
+    private static array $renderContextStack = [];
+    
     /**
      * Returns the NoTmpl config instance to allow configuration of the engine
      *
@@ -27,95 +30,130 @@ class NoTmpl
      * @param string $template - The template to render
      * @param array $parameters - The parameters to be passed to the template
      * @return string
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      * @noinspection PhpDocMissingThrowsInspection
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function render(string $template, array $parameters = []): string
     {
-        $component = new Component(
-            ComponentStack::instance(),
-            TemplateResolver::instance()->resolve($template),
-            $parameters
-        );
-        
         try {
-            return $component->start()->end()->getOutput();
-        } catch(Throwable $ex) {
-            $component->cleanUp();
-            /** @noinspection PhpUnhandledExceptionInspection */
-            throw $ex; // Forwarding errors
+            $rCtx = self::$renderContextStack[] = new RenderContext(self::config());
+            $result = $rCtx->render($template, $parameters);
+            array_pop(self::$renderContextStack);
+        } catch(\Throwable $e) {
+            array_pop(self::$renderContextStack);
+            throw $e;
         }
+        
+        return $result;
     }
     
     /**
-     * Starts a subcomponent block and loads a specific template for it.
-     * Slots of the subcomponent are not shared with the parent component which allows reuse of names.
+     * Starts a component block and loads a specific template for it.
+     * Slots of the component are not shared with the parent component which allows reuse of names.
      *
-     * @param string $template - The subcomponent to render
+     * @param string $name - The subcomponent to render
      * @param array $parameters - Specified additional parameters
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
-    public static function component(string $template, array $parameters = []): TagEnder
+    public static function component(string $name, array $parameters = []): void
     {
-        ComponentStack::instance()->getCurrent()
-            ->component(
-                TemplateResolver::instance()->resolve($template),
-                $parameters,
-            )->start();
-        return new TagEnder(self::endComponent(...));
+        self::getCurrentRenderContext(__METHOD__)->component($name, $parameters);
     }
     
     /**
-     * Ends the last subcomponent block
+     * Ends the last open component tag
      *
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
-    public static function endComponent(): void
+    public static function componentEnd(): void
     {
-        ComponentStack::instance()->getCurrent()->end();
+        self::getCurrentRenderContext(__METHOD__)->componentEnd();
     }
     
     /**
-     * Starts the context of a slot to allow replacement of the slot content on demand.
-     * If a slot with the same name already exists, it replaces the content of the existing slot with this one.
+     * Starts the context of a slot within a component template to allow replacement of the slot content on demand.
+     * Slot names must be unique within a component.
      *
      * @param string $name
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
-    public static function slot(string $name): TagEnder
+    public static function slot(string $name = 'default'): void
     {
-        ComponentStack::instance()->getCurrent()->startSlot($name);
-        return new TagEnder(self::endSlot(...));
+        self::getCurrentRenderContext(__METHOD__)->slot($name);
     }
     
     /**
-     * Renders the content of the parent slot
+     * Ends the context of the last open slot tag.
      *
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
+     * @throws RenderException
+     * @noinspection PhpFullyQualifiedNameUsageInspection
+     */
+    public static function slotEnd(): void
+    {
+        self::getCurrentRenderContext(__METHOD__)->slotEnd();
+    }
+    
+    /**
+     * Starts the context of a use-slot to overwrite the internal content of a slot within a component.
+     * Use-slot names must be unique within a component.
+     *
+     * Usage of 'default' slot is optional as a discrete use-slot:default is created for content put directly
+     * between a component tags.
+     *
+     * @param string $name
+     * @return void
+     * @throws RenderException
+     */
+    public static function useSlot(string $name = 'default'): void
+    {
+        self::getCurrentRenderContext(__METHOD__)->useSlot($name);
+    }
+    
+    /**
+     * Renders the content of the used parent slot
+     *
+     * @return void
+     * @throws RenderException
      * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function parentSlot(): void
     {
-        ComponentStack::instance()->getCurrent()->renderParentSlot();
+        self::getCurrentRenderContext(__METHOD__)->parentSlot();
     }
     
     /**
-     * Ends the context of the last declared slot.
+     * Ends the context of the last open use-slot tag
      *
      * @return void
-     * @throws \Stefmachine\NoTmpl\Exception\RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws RenderException
      */
-    public static function endSlot(): void
+    public static function useSlotEnd(): void
     {
-        ComponentStack::instance()->getCurrent()->endSlot();
+        self::getCurrentRenderContext(__METHOD__)->useSlotEnd();
+    }
+    
+    /**
+     * @param string $fn
+     * @return RenderContext
+     * @throws RenderException
+     */
+    private static function getCurrentRenderContext(string $fn): RenderContext
+    {
+        if(empty(self::$renderContextStack)) {
+            throw new RenderException(
+                "Cannot use '{$fn}' outside of render context.",
+                RenderError::CTX_NO_CONTEXT
+            );
+        }
+        
+        return self::$renderContextStack[count(self::$renderContextStack) - 1];
     }
 }

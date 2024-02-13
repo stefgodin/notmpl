@@ -1,7 +1,7 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\component;
-use function Stefmachine\NoTmpl\Render\end_component;
+use function StefGodin\NoTmpl\Render\component;
+use function StefGodin\NoTmpl\Render\component_end;
 
 component('early_component_end.php');
-end_component();
+component_end();

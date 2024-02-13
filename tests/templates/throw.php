@@ -1,6 +1,6 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot;
 
 /** @formatter:off */
 ?>

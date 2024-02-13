@@ -1,11 +1,11 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\end_slot;
-use function Stefmachine\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot;
+use function StefGodin\NoTmpl\Render\slot_end;
 
 /** @formatter:off */
 ?>
-<?php slot('title') ?><h1>menu-title</h1><?php end_slot() ?>
+<?php slot('title') ?><h1>menu-title</h1><?php slot_end() ?>
 <ul>
     <?php slot('items')->end() ?>
 </ul>

@@ -1,6 +1,6 @@
 <?php
 
-use function Stefmachine\NoTmpl\Render\component;
+use function StefGodin\NoTmpl\Render\component;
 
 /** @formatter:off */
 ?>

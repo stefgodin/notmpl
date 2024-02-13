@@ -1,16 +1,16 @@
 <?php
 
 
-namespace Stefmachine\NoTmpl\Tests\Escape;
+namespace StefGodin\NoTmpl\Tests\Escape;
 
 use PHPUnit\Framework\TestCase;
 use stdClass;
-use Stefmachine\NoTmpl\Escape\Esc;
-use Stefmachine\NoTmpl\Render\NoTmpl;
-use function Stefmachine\NoTmpl\Escape\esc_css;
-use function Stefmachine\NoTmpl\Escape\esc_html;
-use function Stefmachine\NoTmpl\Escape\esc_html_attr;
-use function Stefmachine\NoTmpl\Escape\esc_js;
+use StefGodin\NoTmpl\Escape\Esc;
+use StefGodin\NoTmpl\Render\NoTmpl;
+use function StefGodin\NoTmpl\Escape\esc_css;
+use function StefGodin\NoTmpl\Escape\esc_html;
+use function StefGodin\NoTmpl\Escape\esc_html_attr;
+use function StefGodin\NoTmpl\Escape\esc_js;
 
 class EscTest extends TestCase
 {
