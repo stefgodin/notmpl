@@ -33,13 +33,14 @@ function component_end(): void
  * Proxies {@see NoTmpl::slot}
  *
  * @param string $name - The slot name
+ * @param array $bindings - Parameters to provide to the use-slots bindings
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function slot(string $name = 'default'): void
+function slot(string $name = 'default', array $bindings = []): void
 {
-    NoTmpl::slot($name);
+    NoTmpl::slot($name, $bindings);
 }
 
 /**
@@ -58,13 +59,14 @@ function slot_end(): void
  * Proxies {@see NoTmpl::slot}
  *
  * @param string $name - The slot name
+ * @param array|null $bindings - The slot bindings to access some exposed values
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function use_slot(string $name): void
+function use_slot(string $name = 'default', array|null &$bindings = null): void
 {
-    NoTmpl::useSlot($name);
+    NoTmpl::useSlot($name, $bindings);
 }
 
 /**

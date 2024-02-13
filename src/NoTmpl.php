@@ -88,12 +88,13 @@ class NoTmpl
      * Slot names must be unique within a component.
      *
      * @param string $name
+     * @param array $bindings - Parameters to provide to the use-slots bindings
      * @return void
      * @throws EngineException
      */
-    public static function slot(string $name = 'default'): void
+    public static function slot(string $name = 'default', array $bindings = []): void
     {
-        self::getCurrentRenderContext(__METHOD__)->slot($name);
+        self::getCurrentRenderContext(__METHOD__)->slot($name, $bindings);
     }
     
     /**
@@ -115,12 +116,13 @@ class NoTmpl
      * between a component tags.
      *
      * @param string $name
+     * @param array|null $bindings - The slot bindings to access some exposed values
      * @return void
      * @throws \StefGodin\NoTmpl\Engine\EngineException
      */
-    public static function useSlot(string $name = 'default'): void
+    public static function useSlot(string $name = 'default', array|null &$bindings = null): void
     {
-        self::getCurrentRenderContext(__METHOD__)->useSlot($name);
+        self::getCurrentRenderContext(__METHOD__)->useSlot($name, $bindings);
     }
     
     /**

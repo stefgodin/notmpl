@@ -1,7 +1,7 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Tests\Escape;
+namespace StefGodin\NoTmpl\Tests;
 
 use PHPUnit\Framework\TestCase;
 use stdClass;

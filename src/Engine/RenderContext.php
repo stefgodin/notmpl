@@ -14,6 +14,7 @@ class RenderContext
     private const INTERNAL_TAG = 'i';
     
     protected OutputBufferList $obList;
+    protected array $slotBindings = [];
     
     public function __construct(
         private readonly TemplateResolver $templateResolver,
@@ -102,7 +103,7 @@ class RenderContext
             ->close();
         
         $parentBuffer->writeContent($ob->getOutput());
-        $this->useSlot('default', true);
+        $this->useSlot(internal: true);
     }
     
     /**
@@ -142,10 +143,11 @@ class RenderContext
     
     /**
      * @param string $name
+     * @param array $bindings
      * @return void
      * @throws EngineException
      */
-    public function slot(string $name = 'default'): void
+    public function slot(string $name = 'default', array $bindings = []): void
     {
         $componentOb = $this->obList->getLast(
             self::isTagOpen(),
@@ -160,7 +162,13 @@ class RenderContext
             );
         }
         
-        if($this->obList->getFirst(self::isSlot(), OutputBufferList::hasName("slot:{$name}"))) {
+        $existingSlot = $this->obList->getFirst(
+            self::isSlot(),
+            OutputBufferList::hasName("slot:{$name}"),
+            OutputBufferList::hasTag(self::COMPONENT_TAG, $componentOb->getId()),
+        );
+        
+        if($existingSlot) {
             throw new EngineException(
                 "There is already a '{$name}' slot in the component '{$componentOb->getName()}'",
                 EngineException::CTX_INVALID_NAME
@@ -175,6 +183,8 @@ class RenderContext
             ->addTag(self::OPEN_TAG)
             ->addTag(self::COMPONENT_TAG, $componentOb->getId())
             ->open();
+        
+        $this->slotBindings[$ob->getId()] = $bindings;
     }
     
     /**
@@ -205,11 +215,12 @@ class RenderContext
     
     /**
      * @param string $name
+     * @param array $bindings
      * @param bool $internal
      * @return void
      * @throws EngineException
      */
-    public function useSlot(string $name = 'default', bool $internal = false): void
+    public function useSlot(string $name = 'default', array|null &$bindings = null, bool $internal = false): void
     {
         $componentOb = $this->obList->getLast(
             self::isTagOpen(),
@@ -229,6 +240,7 @@ class RenderContext
             OutputBufferList::hasName("slot:{$name}"),
         );
         
+        $bindings = [];
         if($parentSlot) {
             $existingUseSlot = $this->obList->getLast(
                 self::isUseSlot(),
@@ -243,6 +255,8 @@ class RenderContext
                     EngineException::CTX_INVALID_NAME
                 );
             }
+            
+            $bindings = $this->slotBindings[$parentSlot->getId()];
         }
         
         $expectedOb = $componentOb;

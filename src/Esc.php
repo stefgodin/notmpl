@@ -3,7 +3,6 @@
 
 namespace StefGodin\NoTmpl;
 
-use Laminas\Escaper\Escaper as LaminasEscaper;
 use Stringable;
 
 class Esc
@@ -18,7 +17,13 @@ class Esc
     }
     
     /**
-     * Stringifies the mixed value and proxies the {@see LaminasEscaper::escapeHtml}
+     * Stringifies the mixed value and escapes the value for html and quoted html attributes
+     *
+     * Can be used for escaping untrusted values put into HTML. The function will also work for quoted HTML attributes
+     * but it won't work for illegally quoted or unquoted HTML attributes.
+     *
+     * If you need better escaping rules or escaping JS and CSS, consider using laminas-escaper
+     * {@link https://packagist.org/packages/laminas/laminas-escaper}
      *
      * @param mixed $value
      * @return string

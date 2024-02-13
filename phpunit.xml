@@ -4,11 +4,8 @@
          verbose="true"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="StefGodin/notmpl/render test suite">
-            <directory>tests/Render</directory>
-        </testsuite>
-        <testsuite name="StefGodin/notmpl/escape test suite">
-            <directory>tests/Escape</directory>
+        <testsuite name="StefGodin/NoTmpl test suite">
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>
