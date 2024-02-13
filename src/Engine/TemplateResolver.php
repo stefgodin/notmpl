@@ -1,10 +1,7 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Render;
-
-use StefGodin\NoTmpl\Exception\RenderError;
-use StefGodin\NoTmpl\Exception\RenderException;
+namespace StefGodin\NoTmpl\Engine;
 
 /**
  * @internal
@@ -19,7 +16,7 @@ class TemplateResolver
     /**
      * @param string $template
      * @return string
-     * @throws RenderException
+     * @throws EngineException
      */
     public function resolve(string $template): string
     {
@@ -44,9 +41,9 @@ class TemplateResolver
             }
         }
         
-        throw new RenderException(
+        throw new EngineException(
             sprintf("Could not resolve template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)),
-            RenderError::TMPLRES_FILE_NOT_FOUND
+            EngineException::TMPLRES_FILE_NOT_FOUND
         );
     }
 }

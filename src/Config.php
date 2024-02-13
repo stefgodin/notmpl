@@ -1,26 +1,19 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Config;
-
-use StefGodin\NoTmpl\Escape\Esc;
-use StefGodin\NoTmpl\Singleton\SingletonTrait;
+namespace StefGodin\NoTmpl;
 
 class Config
 {
-    use SingletonTrait;
-    
     private array $renderGlobalParams;
     private array $templateDirectories;
     private array $templateAliases;
-    private string|null $escaperEncoding;
     
     public function __construct()
     {
         $this->renderGlobalParams = [];
         $this->templateDirectories = [];
         $this->templateAliases = [];
-        $this->escaperEncoding = null;
     }
     
     public function setRenderGlobalParam(string $name, mixed $value): static
@@ -96,17 +89,5 @@ class Config
     public function getTemplateAliases(): array
     {
         return $this->templateAliases;
-    }
-    
-    public function setEscaperEncoding(string|null $_encoding): static
-    {
-        $this->escaperEncoding = $_encoding;
-        Esc::resetInstance();
-        return $this;
-    }
-    
-    public function getEscaperEncoding(): string|null
-    {
-        return $this->escaperEncoding;
     }
 }

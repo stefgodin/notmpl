@@ -1,11 +1,12 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Render;
+namespace StefGodin\NoTmpl;
 
-use StefGodin\NoTmpl\Config\Config;
-use StefGodin\NoTmpl\Exception\RenderError;
-use StefGodin\NoTmpl\Exception\RenderException;
+use StefGodin\NoTmpl\Engine\EngineException;
+use StefGodin\NoTmpl\Engine\RenderContext;
+use StefGodin\NoTmpl\Engine\TemplateResolver;
+use Throwable;
 
 /**
  * Static object class to regroup all rendering functions of the NoTmpl library
@@ -13,6 +14,7 @@ use StefGodin\NoTmpl\Exception\RenderException;
 class NoTmpl
 {
     private static array $renderContextStack = [];
+    private static Config $config;
     
     /**
      * Returns the NoTmpl config instance to allow configuration of the engine
@@ -21,7 +23,7 @@ class NoTmpl
      */
     public static function config(): Config
     {
-        return Config::instance();
+        return self::$config ??= new Config();
     }
     
     /**
@@ -30,18 +32,26 @@ class NoTmpl
      * @param string $template - The template to render
      * @param array $parameters - The parameters to be passed to the template
      * @return string
-     * @throws RenderException
+     * @throws EngineException
      * @noinspection PhpDocMissingThrowsInspection
-     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public static function render(string $template, array $parameters = []): string
     {
+        $templateResolver = new TemplateResolver(
+            self::config()->getTemplateDirectories(),
+            self::config()->getTemplateAliases(),
+        );
+        
         try {
-            $rCtx = self::$renderContextStack[] = new RenderContext(self::config());
+            $rCtx = self::$renderContextStack[] = new RenderContext(
+                $templateResolver,
+                self::config()->getRenderGlobalParams()
+            );
             $result = $rCtx->render($template, $parameters);
             array_pop(self::$renderContextStack);
-        } catch(\Throwable $e) {
+        } catch(Throwable $e) {
             array_pop(self::$renderContextStack);
+            /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
         }
         
@@ -55,8 +65,7 @@ class NoTmpl
      * @param string $name - The subcomponent to render
      * @param array $parameters - Specified additional parameters
      * @return void
-     * @throws RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws EngineException
      */
     public static function component(string $name, array $parameters = []): void
     {
@@ -67,8 +76,7 @@ class NoTmpl
      * Ends the last open component tag
      *
      * @return void
-     * @throws RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws EngineException
      */
     public static function componentEnd(): void
     {
@@ -81,8 +89,7 @@ class NoTmpl
      *
      * @param string $name
      * @return void
-     * @throws RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws EngineException
      */
     public static function slot(string $name = 'default'): void
     {
@@ -93,8 +100,7 @@ class NoTmpl
      * Ends the context of the last open slot tag.
      *
      * @return void
-     * @throws RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws EngineException
      */
     public static function slotEnd(): void
     {
@@ -110,7 +116,7 @@ class NoTmpl
      *
      * @param string $name
      * @return void
-     * @throws RenderException
+     * @throws \StefGodin\NoTmpl\Engine\EngineException
      */
     public static function useSlot(string $name = 'default'): void
     {
@@ -121,8 +127,7 @@ class NoTmpl
      * Renders the content of the used parent slot
      *
      * @return void
-     * @throws RenderException
-     * @noinspection PhpFullyQualifiedNameUsageInspection
+     * @throws EngineException
      */
     public static function parentSlot(): void
     {
@@ -133,7 +138,7 @@ class NoTmpl
      * Ends the context of the last open use-slot tag
      *
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public static function useSlotEnd(): void
     {
@@ -143,14 +148,14 @@ class NoTmpl
     /**
      * @param string $fn
      * @return RenderContext
-     * @throws RenderException
+     * @throws \StefGodin\NoTmpl\Engine\EngineException
      */
     private static function getCurrentRenderContext(string $fn): RenderContext
     {
         if(empty(self::$renderContextStack)) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot use '{$fn}' outside of render context.",
-                RenderError::CTX_NO_CONTEXT
+                EngineException::CTX_NO_CONTEXT
             );
         }
         

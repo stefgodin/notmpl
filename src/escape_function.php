@@ -1,7 +1,7 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Escape;
+namespace StefGodin\NoTmpl;
 
 /**
  * Proxies {@see Esc::html}

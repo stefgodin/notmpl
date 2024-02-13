@@ -1,16 +1,13 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Escape;
+namespace StefGodin\NoTmpl;
 
 use Laminas\Escaper\Escaper as LaminasEscaper;
-use StefGodin\NoTmpl\Singleton\SingletonTrait;
 use Stringable;
 
 class Esc
 {
-    use SingletonTrait;
-    
     private static function stringify(mixed $value): string
     {
         if(!is_string($value) && !is_scalar($value) && !$value instanceof Stringable) {

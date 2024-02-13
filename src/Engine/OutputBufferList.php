@@ -1,7 +1,7 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Engine;
 
 class OutputBufferList
 {

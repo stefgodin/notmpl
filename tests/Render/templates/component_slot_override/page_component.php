@@ -1,7 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\Render\slot;
-use function StefGodin\NoTmpl\Render\slot_end;
+use function StefGodin\NoTmpl\slot;
+use function StefGodin\NoTmpl\slot_end;
 
 /** @formatter:off */
 ?>

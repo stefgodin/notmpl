@@ -1,10 +1,10 @@
 <?php
 
-use function StefGodin\NoTmpl\Render\component;
-use function StefGodin\NoTmpl\Render\component_end;
-use function StefGodin\NoTmpl\Render\parent_slot;
-use function StefGodin\NoTmpl\Render\use_slot;
-use function StefGodin\NoTmpl\Render\use_slot_end;
+use function StefGodin\NoTmpl\component;
+use function StefGodin\NoTmpl\component_end;
+use function StefGodin\NoTmpl\parent_slot;
+use function StefGodin\NoTmpl\use_slot;
+use function StefGodin\NoTmpl\use_slot_end;
 
 /** @formatter:off */
 ?>

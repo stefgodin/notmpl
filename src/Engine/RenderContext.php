@@ -1,11 +1,8 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Render;
+namespace StefGodin\NoTmpl\Engine;
 
-use StefGodin\NoTmpl\Config\Config;
-use StefGodin\NoTmpl\Exception\RenderError;
-use StefGodin\NoTmpl\Exception\RenderException;
 use Throwable;
 
 class RenderContext
@@ -16,25 +13,21 @@ class RenderContext
     private const OPEN_TAG = 'o';
     private const INTERNAL_TAG = 'i';
     
-    protected TemplateResolver $templateResolver;
     protected OutputBufferList $obList;
     
     public function __construct(
-        protected Config $config,
+        private readonly TemplateResolver $templateResolver,
+        private readonly array            $globalParams,
     )
     {
         $this->obList = new OutputBufferList();
-        $this->templateResolver = new TemplateResolver(
-            $this->config->getTemplateDirectories(),
-            $this->config->getTemplateAliases(),
-        );
     }
     
     /**
      * @param string $name
      * @param array $params
      * @return string
-     * @throws RenderException
+     * @throws EngineException
      */
     public function render(string $name, array $params = []): string
     {
@@ -83,15 +76,15 @@ class RenderContext
      * @param string $name
      * @param array $params
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function component(string $name, array $params = []): void
     {
         $parentBuffer = $this->obList->getLast(OutputBufferList::isOpen());
         if(!$parentBuffer) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot create component '{$name}' outside of a rendering context",
-                RenderError::CTX_NO_CONTEXT
+                EngineException::CTX_NO_CONTEXT
             );
         }
         
@@ -101,7 +94,7 @@ class RenderContext
         $file = $this->templateResolver->resolve($name);
         $isPhp = pathinfo($file, PATHINFO_EXTENSION) === 'php';
         
-        $allParams = array_merge($this->config->getRenderGlobalParams(), $params);
+        $allParams = array_merge($this->globalParams, $params);
         
         $ob->addTag(self::OPEN_TAG)
             ->open()
@@ -114,7 +107,7 @@ class RenderContext
     
     /**
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function componentEnd(): void
     {
@@ -124,9 +117,9 @@ class RenderContext
         );
         
         if(!$componentOb || $componentOb->isOpen()) {
-            throw new RenderException(
+            throw new EngineException(
                 "There is no component to end",
-                RenderError::CTX_NO_OPEN_TAG
+                EngineException::CTX_NO_OPEN_TAG
             );
         }
         
@@ -138,9 +131,9 @@ class RenderContext
         }
         
         if($ob !== $componentOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot close component '{$componentOb->getName()}' before closing '{$ob->getName()}'",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
@@ -150,7 +143,7 @@ class RenderContext
     /**
      * @param string $name
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function slot(string $name = 'default'): void
     {
@@ -161,16 +154,16 @@ class RenderContext
         );
         
         if(!$componentOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "There is no rendering component to add a slot '{$name}' to",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
         if($this->obList->getFirst(self::isSlot(), OutputBufferList::hasName("slot:{$name}"))) {
-            throw new RenderException(
+            throw new EngineException(
                 "There is already a '{$name}' slot in the component '{$componentOb->getName()}'",
-                RenderError::CTX_INVALID_NAME
+                EngineException::CTX_INVALID_NAME
             );
         }
         
@@ -186,7 +179,7 @@ class RenderContext
     
     /**
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function slotEnd(): void
     {
@@ -195,14 +188,14 @@ class RenderContext
             self::isSlot(),
         );
         if(!$slotOb) {
-            throw new RenderException("There is no slot to close", RenderError::CTX_NO_OPEN_TAG);
+            throw new EngineException("There is no slot to close", EngineException::CTX_NO_OPEN_TAG);
         }
         
         $ob = $this->obList->getLast(self::isTagOpen());
         if($ob !== $slotOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot close slot '{$slotOb->getName()}' before closing '{$ob->getName()}'",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
@@ -214,7 +207,7 @@ class RenderContext
      * @param string $name
      * @param bool $internal
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function useSlot(string $name = 'default', bool $internal = false): void
     {
@@ -224,9 +217,9 @@ class RenderContext
             OutputBufferList::isClosed(),
         );
         if(!$componentOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "There is no component to use a slot '{$name}' from",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
@@ -245,9 +238,9 @@ class RenderContext
             );
             
             if($existingUseSlot) {
-                throw new RenderException(
+                throw new EngineException(
                     "There is already a '{$name}' use-slot in the component '{$componentOb->getName()}'",
-                    RenderError::CTX_INVALID_NAME
+                    EngineException::CTX_INVALID_NAME
                 );
             }
         }
@@ -263,9 +256,9 @@ class RenderContext
         
         $topMostOb = $this->obList->getLast(self::isTagOpen());
         if($topMostOb !== $expectedOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot use a slot '{$name}' when not directly placed inside component '{$componentOb->getName()}'",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
@@ -284,7 +277,7 @@ class RenderContext
     
     /**
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function parentSlot(): void
     {
@@ -299,9 +292,9 @@ class RenderContext
         );
         
         if(!$useSlotOb || !$componentOb || $componentOb->getId() !== $useSlotOb->getTag(self::COMPONENT_TAG)) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot render parent slot content outside of use-slot context",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
@@ -314,7 +307,7 @@ class RenderContext
     
     /**
      * @return void
-     * @throws RenderException
+     * @throws EngineException
      */
     public function useSlotEnd(): void
     {
@@ -323,17 +316,17 @@ class RenderContext
             self::isUseSlot(),
         );
         if(!$slotOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "There is no use-slot to close",
-                RenderError::CTX_INVALID_OPEN_TAG
+                EngineException::CTX_INVALID_OPEN_TAG
             );
         }
         
         $ob = $this->obList->getLast(self::isTagOpen());
         if($ob !== $slotOb) {
-            throw new RenderException(
+            throw new EngineException(
                 "Cannot close use-slot '{$slotOb->getName()}' before closing '{$ob->getName()}'",
-                RenderError::OB_INVALID_STATE
+                EngineException::OB_INVALID_STATE
             );
         }
         

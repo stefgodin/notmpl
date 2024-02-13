@@ -1,7 +1,7 @@
 <?php
 
 
-namespace StefGodin\NoTmpl\Render;
+namespace StefGodin\NoTmpl;
 
 /**
  * Proxies {@see NoTmpl::component}
@@ -9,7 +9,7 @@ namespace StefGodin\NoTmpl\Render;
  * @param string $name - The component to render
  * @param array $parameters - Specified additional parameters
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function component(string $name, array $parameters = []): void
@@ -21,7 +21,7 @@ function component(string $name, array $parameters = []): void
  * Proxies {@see NoTmpl::componentEnd}
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function component_end(): void
@@ -34,7 +34,7 @@ function component_end(): void
  *
  * @param string $name - The slot name
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function slot(string $name = 'default'): void
@@ -46,7 +46,7 @@ function slot(string $name = 'default'): void
  * Proxies {@see NoTmpl::slotEnd}
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function slot_end(): void
@@ -59,7 +59,7 @@ function slot_end(): void
  *
  * @param string $name - The slot name
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function use_slot(string $name): void
@@ -71,7 +71,7 @@ function use_slot(string $name): void
  * Proxies {@see NoTmpl::parentSlot}
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function parent_slot(): void
@@ -83,7 +83,7 @@ function parent_slot(): void
  * Proxies {@see NoTmpl::slotEnd}
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Exception\RenderException
+ * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
 function use_slot_end(): void

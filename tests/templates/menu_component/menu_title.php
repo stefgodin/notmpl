@@ -1,1 +1,0 @@
-<h3>custom-menu-title</h3>

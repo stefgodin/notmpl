@@ -8,8 +8,8 @@
       "StefGodin\\NoTmpl\\": "src/"
     },
     "files": [
-      "src/Render/render_function.php",
-      "src/Escape/escape_function.php"
+      "src/render_function.php",
+      "src/escape_function.php"
     ]
   },
   "autoload-dev": {
