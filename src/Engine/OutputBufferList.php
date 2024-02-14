@@ -3,6 +3,9 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
+/**
+ * @internal
+ */
 class OutputBufferList
 {
     /** @var OutputBuffer[] */

@@ -5,7 +5,6 @@ namespace StefGodin\NoTmpl\Tests;
 
 use PHPUnit\Framework\TestCase;
 use stdClass;
-use StefGodin\NoTmpl\Esc;
 use function StefGodin\NoTmpl\esc_html;
 
 class EscTest extends TestCase
@@ -21,7 +20,7 @@ class EscTest extends TestCase
         ];
         
         foreach($nonStringable as $type => $value) {
-            self::assertSame('', esc_html($value), "Expected non-stringable '{$type}' to return empty string from " . \StefGodin\NoTmpl\Esc::class . "::html");
+            self::assertSame('', esc_html($value), "Expected non-stringable '{$type}' to return empty string from esc_html");
         }
     }
     
@@ -44,7 +43,7 @@ class EscTest extends TestCase
         ];
         
         foreach($tests as $name => [$value, $expected]) {
-            self::assertSame($expected, esc_html($value), "Expected stringable '{$name}' to return '{$expected}' string from " . Esc::class . "::html");
+            self::assertSame($expected, esc_html($value), "Expected stringable '{$name}' to return '{$expected}' string from esc_html");
         }
     }
 }

@@ -5,6 +5,7 @@ namespace StefGodin\NoTmpl;
 
 use StefGodin\NoTmpl\Engine\EngineException;
 use StefGodin\NoTmpl\Engine\RenderContext;
+use StefGodin\NoTmpl\Engine\RenderContextStack;
 use StefGodin\NoTmpl\Engine\TemplateResolver;
 use Throwable;
 
@@ -13,154 +14,98 @@ use Throwable;
  */
 class NoTmpl
 {
-    private static array $renderContextStack = [];
-    private static Config $config;
+    private array $renderGlobalParams;
+    private array $templateDirectories;
+    private array $templateAliases;
     
-    /**
-     * Returns the NoTmpl config instance to allow configuration of the engine
-     *
-     * @return Config
-     */
-    public static function config(): Config
+    public function __construct()
     {
-        return self::$config ??= new Config();
+        $this->renderGlobalParams = [];
+        $this->templateDirectories = [];
+        $this->templateAliases = [];
     }
     
     /**
      * Renders a template content with given parameters as variables and returns the resulting rendered content as a string.
      *
-     * @param string $template - The template to render
+     * @param string $file - The file to render, can be a component alias
      * @param array $parameters - The parameters to be passed to the template
      * @return string
      * @throws EngineException
-     * @noinspection PhpDocMissingThrowsInspection
      */
-    public static function render(string $template, array $parameters = []): string
+    public function render(string $file, array $parameters = []): string
     {
         $templateResolver = new TemplateResolver(
-            self::config()->getTemplateDirectories(),
-            self::config()->getTemplateAliases(),
+            $this->templateDirectories,
+            $this->templateAliases,
         );
         
+        $renderContext = new RenderContext(
+            $templateResolver,
+            $this->renderGlobalParams
+        );
+        RenderContextStack::$stack[] = $renderContext;
         try {
-            $rCtx = self::$renderContextStack[] = new RenderContext(
-                $templateResolver,
-                self::config()->getRenderGlobalParams()
-            );
-            $result = $rCtx->render($template, $parameters);
-            array_pop(self::$renderContextStack);
+            $result = $renderContext->render($file, $parameters);
         } catch(Throwable $e) {
-            array_pop(self::$renderContextStack);
+            array_pop(RenderContextStack::$stack);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
         }
         
+        array_pop(RenderContextStack::$stack);
         return $result;
     }
     
-    /**
-     * Starts a component block and loads a specific template for it.
-     * Slots of the component are not shared with the parent component which allows reuse of names.
-     *
-     * @param string $name - The subcomponent to render
-     * @param array $parameters - Specified additional parameters
-     * @return void
-     * @throws EngineException
-     */
-    public static function component(string $name, array $parameters = []): void
+    public function setRenderGlobalParam(string $name, mixed $value): static
     {
-        self::getCurrentRenderContext(__METHOD__)->component($name, $parameters);
+        $this->renderGlobalParams[$name] = $value;
+        return $this;
     }
     
-    /**
-     * Ends the last open component tag
-     *
-     * @return void
-     * @throws EngineException
-     */
-    public static function componentEnd(): void
+    public function setRenderGlobalParams(array $values): static
     {
-        self::getCurrentRenderContext(__METHOD__)->componentEnd();
+        $this->renderGlobalParams = $values;
+        return $this;
     }
     
-    /**
-     * Starts the context of a slot within a component template to allow replacement of the slot content on demand.
-     * Slot names must be unique within a component.
-     *
-     * @param string $name
-     * @param array $bindings - Parameters to provide to the use-slots bindings
-     * @return void
-     * @throws EngineException
-     */
-    public static function slot(string $name = 'default', array $bindings = []): void
+    public function addDirectory(string $directory): static
     {
-        self::getCurrentRenderContext(__METHOD__)->slot($name, $bindings);
-    }
-    
-    /**
-     * Ends the context of the last open slot tag.
-     *
-     * @return void
-     * @throws EngineException
-     */
-    public static function slotEnd(): void
-    {
-        self::getCurrentRenderContext(__METHOD__)->slotEnd();
-    }
-    
-    /**
-     * Starts the context of a use-slot to overwrite the internal content of a slot within a component.
-     * Use-slot names must be unique within a component.
-     *
-     * Usage of 'default' slot is optional as a discrete use-slot:default is created for content put directly
-     * between a component tags.
-     *
-     * @param string $name
-     * @param array|null $bindings - The slot bindings to access some exposed values
-     * @return void
-     * @throws \StefGodin\NoTmpl\Engine\EngineException
-     */
-    public static function useSlot(string $name = 'default', array|null &$bindings = null): void
-    {
-        self::getCurrentRenderContext(__METHOD__)->useSlot($name, $bindings);
-    }
-    
-    /**
-     * Renders the content of the used parent slot
-     *
-     * @return void
-     * @throws EngineException
-     */
-    public static function parentSlot(): void
-    {
-        self::getCurrentRenderContext(__METHOD__)->parentSlot();
-    }
-    
-    /**
-     * Ends the context of the last open use-slot tag
-     *
-     * @return void
-     * @throws EngineException
-     */
-    public static function useSlotEnd(): void
-    {
-        self::getCurrentRenderContext(__METHOD__)->useSlotEnd();
-    }
-    
-    /**
-     * @param string $fn
-     * @return RenderContext
-     * @throws \StefGodin\NoTmpl\Engine\EngineException
-     */
-    private static function getCurrentRenderContext(string $fn): RenderContext
-    {
-        if(empty(self::$renderContextStack)) {
-            throw new EngineException(
-                "Cannot use '{$fn}' outside of render context.",
-                EngineException::CTX_NO_CONTEXT
-            );
+        if(!in_array($directory, $this->templateDirectories)) {
+            $this->templateDirectories[] = rtrim($directory, '/\\');
         }
         
-        return self::$renderContextStack[count(self::$renderContextStack) - 1];
+        return $this;
+    }
+    
+    public function addDirectories(array $directories): static
+    {
+        foreach($directories as $directory) {
+            $this->addDirectory($directory);
+        }
+        
+        return $this;
+    }
+    
+    public function setDirectories(array $directories): static
+    {
+        $this->templateDirectories = [];
+        $this->addDirectories($directories);
+        return $this;
+    }
+    
+    public function setAlias(string $file, string $alias): static
+    {
+        $this->templateAliases[$alias] = $file;
+        return $this;
+    }
+    
+    public function setAliases(array $templateAliases): static
+    {
+        $this->templateAliases = [];
+        foreach($templateAliases as $alias => $template) {
+            $this->setAlias($template, $alias);
+        }
+        return $this;
     }
 }

@@ -5,6 +5,9 @@ namespace StefGodin\NoTmpl\Engine;
 
 use Throwable;
 
+/**
+ * @internal
+ */
 class RenderContext
 {
     private const COMPONENT_TAG = 'c';
@@ -14,7 +17,8 @@ class RenderContext
     private const INTERNAL_TAG = 'i';
     
     protected OutputBufferList $obList;
-    protected array $slotBindings = [];
+    protected array $slotBindings;
+    protected array $useSlotBindings;
     
     public function __construct(
         private readonly TemplateResolver $templateResolver,
@@ -22,6 +26,8 @@ class RenderContext
     )
     {
         $this->obList = new OutputBufferList();
+        $this->slotBindings = [];
+        $this->useSlotBindings = [];
     }
     
     /**
@@ -29,6 +35,7 @@ class RenderContext
      * @param array $params
      * @return string
      * @throws EngineException
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public function render(string $name, array $params = []): string
     {
@@ -215,12 +222,12 @@ class RenderContext
     
     /**
      * @param string $name
-     * @param array $bindings
+     * @param mixed $bindings
      * @param bool $internal
      * @return void
      * @throws EngineException
      */
-    public function useSlot(string $name = 'default', array|null &$bindings = null, bool $internal = false): void
+    public function useSlot(string $name = 'default', mixed &$bindings = null, bool $internal = false): void
     {
         $componentOb = $this->obList->getLast(
             self::isTagOpen(),
@@ -240,7 +247,6 @@ class RenderContext
             OutputBufferList::hasName("slot:{$name}"),
         );
         
-        $bindings = [];
         if($parentSlot) {
             $existingUseSlot = $this->obList->getLast(
                 self::isUseSlot(),
@@ -255,8 +261,6 @@ class RenderContext
                     EngineException::CTX_INVALID_NAME
                 );
             }
-            
-            $bindings = $this->slotBindings[$parentSlot->getId()];
         }
         
         $expectedOb = $componentOb;
@@ -286,6 +290,13 @@ class RenderContext
         
         if($internal) {
             $ob->addTag(self::INTERNAL_TAG);
+        }
+        
+        $this->useSlotBindings[$ob->getId() . ':previous'] = $bindings; // Copy data
+        $this->useSlotBindings[$ob->getId()] = &$bindings; // Keep direct reference
+        $bindings = []; // Cleanup for new scope
+        if($parentSlot) {
+            $bindings = $this->slotBindings[$parentSlot->getId()];
         }
     }
     
@@ -346,6 +357,11 @@ class RenderContext
         
         $ob->close()
             ->clearTag(self::OPEN_TAG);
+        
+        // Reset referenced bindings to ensure proper scope references (clearing scope variable within template)
+        $this->useSlotBindings[$ob->getId()] = $this->useSlotBindings[$ob->getId() . ':previous'];
+        unset($this->useSlotBindings[$ob->getId()]);
+        unset($this->useSlotBindings[$ob->getId() . ':previous']);
     }
     
     private static function isComponent(): callable

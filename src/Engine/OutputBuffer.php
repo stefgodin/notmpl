@@ -8,14 +8,6 @@ namespace StefGodin\NoTmpl\Engine;
  */
 class OutputBuffer
 {
-    /** @var OutputBuffer[] */
-    private static array $allBuffers = [];
-    
-    private static function getCurrentLevelName(): string
-    {
-        return (self::$allBuffers[ob_get_level()] ?? null)?->getName() ?? 'unknown';
-    }
-    
     private readonly string $id;
     private string|null $output;
     private int|null $level;
@@ -47,20 +39,14 @@ class OutputBuffer
      */
     public function open(): static
     {
-        if($this->isOpen()) {
-            throw new EngineException(
-                "The output buffer '{$this->name}' is already opened.",
-                EngineException::OB_INVALID_STATE
-            );
+        if(!$this->wasOpened()) {
+            ob_start(function(string $buffer) {
+                $this->output = $buffer;
+                return "";
+            });
+            $this->level = ob_get_level();
         }
         
-        ob_start(function(string $buffer) {
-            $this->output = $buffer;
-            unset(self::$allBuffers[$this->level]);
-            return "";
-        });
-        $this->level = ob_get_level();
-        self::$allBuffers[$this->level] = $this;
         return $this;
     }
     
@@ -85,29 +71,17 @@ class OutputBuffer
      */
     public function close(): static
     {
-        if($this->isClosed()) {
-            throw new EngineException(
-                "The output buffer '{$this->name}' is already closed.",
-                EngineException::OB_INVALID_STATE
-            );
+        if($this->isOpen()) {
+            if(!$this->isCurrentOutputBuffer()) {
+                throw new EngineException(
+                    "The output buffer '{$this->name}' cannot be closed before other higher output buffer.",
+                    EngineException::OB_INVALID_STATE
+                );
+            }
+            
+            ob_end_clean();
         }
         
-        if(!$this->wasOpened()) {
-            throw new EngineException(
-                "The output buffer '{$this->name}' cannot be closed because it was never opened in the first place.",
-                EngineException::OB_INVALID_STATE
-            );
-        }
-        
-        if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentLevelName();
-            throw new EngineException(
-                "The output buffer '{$this->name}' cannot be closed before non-closed output buffer '{$higherContextName}'.",
-                EngineException::OB_INVALID_STATE
-            );
-        }
-        
-        ob_end_clean();
         return $this;
     }
     
@@ -119,9 +93,8 @@ class OutputBuffer
     {
         while($this->level !== null && ob_get_level() >= $this->level && ob_get_level() > 0) {
             if(ob_end_clean() === false && ob_end_flush() === false) {
-                $higherContextName = self::getCurrentLevelName();
                 throw new EngineException(
-                    "Failed to forcefully close output buffer '{$this->name}' because '{$higherContextName}' context prevents closing.",
+                    "Failed to forcefully close output buffer '{$this->name}' because an other higher output buffer prevents closing.",
                     EngineException::OB_INVALID_STATE
                 );
             }
@@ -165,9 +138,8 @@ class OutputBuffer
         }
         
         if(!$this->isCurrentOutputBuffer()) {
-            $higherContextName = self::getCurrentLevelName();
             throw new EngineException(
-                "Cannot write content into output buffer '{$this->name}' when other higher context '{$higherContextName}' is still open.",
+                "Cannot write content into output buffer '{$this->name}' when other higher output buffer is still open.",
                 EngineException::OB_INVALID_STATE
             );
         }

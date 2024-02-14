@@ -1,47 +1,63 @@
+<p align="center">
+    <img src="./doc/assets/notmpl.png" alt="NoTMPL Logo">
+</p>
+
 # NoTMPL
-A light-weight template-less rendering engine for PHP.
+A light-weight template-less rendering engine for PHP back-end devs.
+ - ☑ No dependencies
+ - ☑ Lightweight code base (< 1000 LOC)
+ - ☑ No cache directory
+ - ☑ No eval
+ - ☑ Composition of pages using components and slots
+ - ☑ Free from autoescaping
+ - ☑ Free from sandboxing
 
-## Specs
- - [x] No dependencies
- - [x] Lightweight code base (< 1000 LOC)
- - [x] Made for back-end devs
- - [x] No cache directory
- - [x] No eval
+## Installation
+Install the library using composer:
+```
+composer require stefgodin/notmpl
+```
 
-What it won't do
- - [ ] Autoescape variables
- - [ ] Sandbox templates
+### Requirements
+This library requires PHP 8.1+
+
+## Quick peek
 
 ```php
-<?php // public/index.php
+<?php // index.php
 
 use StefGodin\NoTmpl\NoTmpl;
 
 require_once __DIR__.'/../vendor/autoload.php'
-    
-NoTmpl::config()
-    ->addTemplateDirectory(__DIR__.'/../templates')
-    ->setTemplateAlias('my_page_component.php', 'page_layout')
-    
-$result = NoTmpl::render('main.php', ['titleValue' => 'My custom title']);
+
+$noTmpl = new NoTmpl();
+echo $noTmpl->render('main.php', ['title' => 'My custom title']);
+/*
+<div>A header</div>
+
+<h1>My custom title</h1>
+<div>
+  <div>
+    <h2>My content</h2>
+  </div>
+</div>
+
+<div>A footer</div>
+*/
 ```
 
 ```php
-<?php // templates/main.php
+<?php // main.php
 
-use function StefGodin\NoTmpl\component;
-use function StefGodin\NoTmpl\component_end;
-use function StefGodin\NoTmpl\use_slot;
-use function StefGodin\NoTmpl\use_slot_end;
-use function StefGodin\NoTmpl\esc_html;
+use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, esc_html as e};
 
 /**
- * @var string $titleValue 
+ * @var string $title
  */
 ?>
-<?php component('page_layout') ?>
-    <?php use_slot('title') ?>
-        <h1><?= esc_html($titleValue) ?></h1>
+<?php component('page.php') ?>
+    <?php use_slot('header') ?>
+        <h1><?= e($title) ?></h1>
     <?php use_slot_end() ?>
     
     <div>
@@ -53,15 +69,12 @@ use function StefGodin\NoTmpl\esc_html;
 ```
 
 ```php
-<?php // templates/my_page_component.php
-
-use function StefGodin\NoTmpl\slot;
-use function StefGodin\NoTmpl\slot_end;
-
+<?php // page.php
+use function StefGodin\NoTmpl\{slot, slot_end};
 ?>
 <div>A header</div>
 
-<?php slot('title') ?>
+<?php slot('header') ?>
     <h1>My normal title</h1>
 <?php slot_end() ?>
 <div>
@@ -71,17 +84,9 @@ use function StefGodin\NoTmpl\slot_end;
 </div>
 ```
 
-## Requirements
-This library requires PHP 8.1+
-
-## Installation
-Install the library using composer:
-```
-composer require stefgodin/notmpl
-```
-
 ## Documentation
-Learn by reading the [documentation](doc/index.md).
+Read the [getting started guide](doc/getting_started.md) if you are new.\
+Browse the [documentation](doc/index.md) for examples and concepts.
 
 ## Support
  - [Issues](https://github.com/stefgodin/notmpl/issues)

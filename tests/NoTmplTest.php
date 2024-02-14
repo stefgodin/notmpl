@@ -21,16 +21,16 @@ class NoTmplTest extends TestCase
     /** @test */
     public function component_slot_override(): void
     {
-        NoTmpl::config()
-            ->setTemplateDirectories([__DIR__ . '/templates/component_slot_override'])
-            ->setTemplateAliases([
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/component_slot_override'])
+            ->setAliases([
                 'page' => 'page_component.php',
                 'footer' => 'footer_component.php',
             ]);
         
         self::assertSame(
             self::tmpl(__DIR__ . '/templates/component_slot_override/expected.html'),
-            self::removeWhitespace(NoTmpl::render('index.php', ['title' => 'hello'])),
+            self::removeWhitespace($noTmpl->render('index.php', ['title' => 'hello'])),
         );
     }
     
@@ -48,13 +48,6 @@ class NoTmplTest extends TestCase
             'use_slot' => use_slot(...),
             'parent_slot' => parent_slot(...),
             'use_slot_end' => use_slot_end(...),
-            'NoTmpl::component' => fn() => NoTmpl::component('test'),
-            'NoTmpl::componentEnd' => NoTmpl::componentEnd(...),
-            'NoTmpl::slot' => NoTmpl::slot(...),
-            'NoTmpl::slotEnd' => NoTmpl::slotEnd(...),
-            'NoTmpl::useSlot' => NoTmpl::useSlot(...),
-            'NoTmpl::parentSlot' => NoTmpl::parentSlot(...),
-            'NoTmpl::useSlotEnd' => NoTmpl::useSlotEnd(...),
         ];
         
         foreach($fns as $name => $fn) {
@@ -76,14 +69,26 @@ class NoTmplTest extends TestCase
     {
         $expectedLevel = ob_get_level();
         
-        NoTmpl::config()
-            ->setTemplateDirectories([__DIR__ . '/templates/fail_render_cleanup']);
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/fail_render_cleanup']);
         
         try {
-            NoTmpl::render('index.php');
+            $noTmpl->render('index.php');
         } catch(RuntimeException) {
             assertSame($expectedLevel, ob_get_level(), "Failing render function did not properly cleanup output buffers");
         }
+    }
+    
+    /** @test */
+    public function slot_bindings_scoping(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/slot_bindings_scoping']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/slot_bindings_scoping/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
     }
     
     private static function tmpl(string $file): string
