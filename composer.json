@@ -1,6 +1,6 @@
 {
   "name": "stefgodin/notmpl",
-  "description": "Ultra lightweight PHP template engine leveraging PHP raw HTML rendering.",
+  "description": "Lightweight PHP template engine leveraging PHP native rendering and output buffers.",
   "type": "library",
   "license": "MIT",
   "autoload": {
