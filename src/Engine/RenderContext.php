@@ -45,6 +45,14 @@ class RenderContext
             $this->component($name, $params);
             $this->componentEnd();
             
+            $openOb = $this->obList->getLast(self::isTagOpen());
+            if($openOb && $openOb !== $ob) {
+                throw new EngineException(
+                    "Cannot close rendering context of '{$name}' before closing '{$openOb->getName()}'",
+                    EngineException::CTX_INVALID_OPEN_TAG
+                );
+            }
+            
             $output = $ob
                 ->close()
                 ->getOutput();
@@ -106,8 +114,17 @@ class RenderContext
         
         $ob->addTag(self::OPEN_TAG)
             ->open()
-            ->writeContent($isPhp ? fn() => IsolatedPhpRenderer::render($file, $allParams) : file_get_contents($file))
-            ->close();
+            ->writeContent($isPhp ? fn() => IsolatedPhpRenderer::render($file, $allParams) : file_get_contents($file));
+        
+        $currentOb = $this->obList->getLast(self::isTagOpen());
+        if($currentOb !== $ob) {
+            throw new EngineException(
+                "'{$currentOb->getName()}' was not closed before leaving component context",
+                EngineException::CTX_INVALID_OPEN_TAG
+            );
+        }
+        
+        $ob->close();
         
         $parentBuffer->writeContent($ob->getOutput());
         $this->useSlot(internal: true);

@@ -91,6 +91,34 @@ class NoTmplTest extends TestCase
         );
     }
     
+    /** @test */
+    public function no_closing_tag(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/no_closing_tag']);
+        
+        $fns = [
+            'component' => fn() => component('component.php'),
+            'slot' => slot(...),
+            'use_slot' => use_slot(...),
+        ];
+        
+        $contexts = ['direct', 'nested'];
+        
+        foreach($contexts as $context) {
+            foreach($fns as $name => $fn) {
+                try {
+                    $noTmpl->render("{$context}.php", ['tag' => $fn]);
+                    self::fail("Calling function '{$name}' without a closing tag did not fail in '{$context}' context.");
+                } catch(EngineException $e) {
+                    assertSame(EngineException::CTX_INVALID_OPEN_TAG, $e->getCode(),
+                        "Calling function '{$name}' without a closing tag failed in '{$context}' context with wrong error code.",
+                    );
+                }
+            }
+        }
+    }
+    
     private static function tmpl(string $file): string
     {
         return self::removeWhitespace(file_get_contents($file));
