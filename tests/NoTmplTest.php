@@ -24,14 +24,23 @@ class NoTmplTest extends TestCase
         $noTmpl = (new NoTmpl())
             ->setDirectories([__DIR__ . '/templates/component_slot_override'])
             ->setAliases([
-                'page' => 'page_component.php',
-                'footer' => 'footer_component.php',
+                'page_component.php' => 'page',
+                'footer_component.php' => 'footer',
             ]);
         
         self::assertSame(
             self::tmpl(__DIR__ . '/templates/component_slot_override/expected.html'),
             self::removeWhitespace($noTmpl->render('index.php', ['title' => 'hello'])),
         );
+    }
+    
+    /** @test */
+    public function file_not_found(): void
+    {
+        $this->expectException(EngineException::class);
+        $this->expectExceptionCode(EngineException::FILE_NOT_FOUND);
+        $noTmpl = new NoTmpl();
+        $noTmpl->render('not_found.php');
     }
     
     /**
@@ -55,7 +64,7 @@ class NoTmplTest extends TestCase
                 $fn();
                 self::fail("Function '{$name}' did not fail when called out of context");
             } catch(EngineException $e) {
-                assertSame(EngineException::CTX_NO_CONTEXT, $e->getCode(),
+                assertSame(EngineException::NO_CONTEXT, $e->getCode(),
                     "Function '{$name}' failed but with wrong error code '{$e->getCode()}'");
             }
         }
@@ -111,7 +120,7 @@ class NoTmplTest extends TestCase
                     $noTmpl->render("{$context}.php", ['tag' => $fn]);
                     self::fail("Calling function '{$name}' without a closing tag did not fail in '{$context}' context.");
                 } catch(EngineException $e) {
-                    assertSame(EngineException::CTX_INVALID_OPEN_TAG, $e->getCode(),
+                    assertSame(EngineException::INVALID_TAG_STRUCTURE, $e->getCode(),
                         "Calling function '{$name}' without a closing tag failed in '{$context}' context with wrong error code.",
                     );
                 }

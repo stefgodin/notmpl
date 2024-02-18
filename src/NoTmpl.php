@@ -4,9 +4,11 @@
 namespace StefGodin\NoTmpl;
 
 use StefGodin\NoTmpl\Engine\EngineException;
+use StefGodin\NoTmpl\Engine\FileManager;
+use StefGodin\NoTmpl\Engine\PhpFileHandler;
+use StefGodin\NoTmpl\Engine\RawFileHandler;
 use StefGodin\NoTmpl\Engine\RenderContext;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
-use StefGodin\NoTmpl\Engine\TemplateResolver;
 use Throwable;
 
 /**
@@ -17,12 +19,17 @@ class NoTmpl
     private array $renderGlobalParams;
     private array $templateDirectories;
     private array $templateAliases;
+    private array $fileHandlers;
     
     public function __construct()
     {
         $this->renderGlobalParams = [];
         $this->templateDirectories = [];
         $this->templateAliases = [];
+        $this->fileHandlers = [
+            '/^.+\.php$/' => PhpFileHandler::render(...),
+            '/^.+\.html$/' => RawFileHandler::load(...),
+        ];
     }
     
     /**
@@ -35,13 +42,14 @@ class NoTmpl
      */
     public function render(string $file, array $parameters = []): string
     {
-        $templateResolver = new TemplateResolver(
+        $fileManager = new FileManager(
             $this->templateDirectories,
             $this->templateAliases,
+            $this->fileHandlers,
         );
         
         $renderContext = new RenderContext(
-            $templateResolver,
+            $fileManager,
             $this->renderGlobalParams
         );
         RenderContextStack::$stack[] = $renderContext;
@@ -100,12 +108,33 @@ class NoTmpl
         return $this;
     }
     
-    public function setAliases(array $templateAliases): static
+    public function setAliases(array $aliases): static
     {
         $this->templateAliases = [];
-        foreach($templateAliases as $alias => $template) {
-            $this->setAlias($template, $alias);
+        foreach($aliases as $file => $alias) {
+            $this->setAlias($file, $alias);
         }
+        return $this;
+    }
+    
+    public function addFileHandler(string $regex, callable $handler): static
+    {
+        $this->fileHandlers[$regex] = $handler;
+        return $this;
+    }
+    
+    public function addFileHandlers(array $handlers): static
+    {
+        foreach($handlers as $regex => $handler) {
+            $this->addFileHandler($regex, $handler);
+        }
+        return $this;
+    }
+    
+    public function setFileHandlers(array $handlers): static
+    {
+        $this->fileHandlers = [];
+        $this->addFileHandlers($handlers);
         return $this;
     }
 }

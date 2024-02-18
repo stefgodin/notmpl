@@ -8,15 +8,15 @@ namespace StefGodin\NoTmpl\Engine;
  */
 class RenderContextStack
 {
-    /** @var RenderContext[] */
+    /** @var \StefGodin\NoTmpl\Engine\RenderContext[] */
     public static array $stack = [];
     
-    public static function current(): RenderContext
+    public static function current(): \StefGodin\NoTmpl\Engine\RenderContext
     {
         if(empty(self::$stack)) {
-            throw new EngineException(
+            throw new \StefGodin\NoTmpl\Engine\EngineException(
                 "There is no current rendering context started. Are you trying to use NoTMPL functions without using 'render' first?",
-                EngineException::CTX_NO_CONTEXT
+                \StefGodin\NoTmpl\Engine\EngineException::NO_CONTEXT
             );
         }
         

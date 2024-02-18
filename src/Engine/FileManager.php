@@ -6,23 +6,24 @@ namespace StefGodin\NoTmpl\Engine;
 /**
  * @internal
  */
-class TemplateResolver
+class FileManager
 {
     public function __construct(
         private readonly array $directories,
         private readonly array $aliases,
+        private readonly array $handlers,
     ) {}
     
     /**
-     * @param string $template
+     * @param string $name
      * @return string
-     * @throws EngineException
+     * @throws \StefGodin\NoTmpl\Engine\EngineException
      */
-    public function resolve(string $template): string
+    public function resolve(string $name): string
     {
         $filenames = array_unique([
-            $this->aliases[$template] ?? $template,
-            $template,
+            $this->aliases[$name] ?? $name,
+            $name,
         ]);
         
         $checkedPaths = [];
@@ -41,9 +42,21 @@ class TemplateResolver
             }
         }
         
-        throw new EngineException(
-            sprintf("Could not resolve template file '%s'. Checked for %s", $template, implode(', ', $checkedPaths)),
-            EngineException::TMPLRES_FILE_NOT_FOUND
+        throw new \StefGodin\NoTmpl\Engine\EngineException(
+            sprintf("Could not resolve template file '%s'. Checked for %s", $name, implode(', ', $checkedPaths)),
+            \StefGodin\NoTmpl\Engine\EngineException::FILE_NOT_FOUND
         );
+    }
+    
+    public function handle(string $name, array $params): void
+    {
+        $file = $this->resolve($name);
+        
+        foreach($this->handlers as $regex => $handler) {
+            if(preg_match($regex, $file) !== false) {
+                $handler($file, $params);
+                return;
+            }
+        }
     }
 }
