@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl\Tests;
@@ -120,7 +128,7 @@ class NoTmplTest extends TestCase
                     $noTmpl->render("{$context}.php", ['tag' => $fn]);
                     self::fail("Calling function '{$name}' without a closing tag did not fail in '{$context}' context.");
                 } catch(EngineException $e) {
-                    assertSame(EngineException::INVALID_TAG_STRUCTURE, $e->getCode(),
+                    assertSame(EngineException::INVALID_TREE_STRUCTURE, $e->getCode(),
                         "Calling function '{$name}' without a closing tag failed in '{$context}' context with wrong error code.",
                     );
                 }

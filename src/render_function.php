@@ -1,27 +1,36 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl;
 
+use StefGodin\NoTmpl\Engine\Node\ComponentNode;
+use StefGodin\NoTmpl\Engine\NodeEnder;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
 
 /**
- * Starts a component block and loads a specific template for it.
- * Slots of the component are not shared with the parent component which allows reuse of names.
+ * Starts a component block and loads a specific file for it.
  *
  * @param string $name - The component to render
  * @param array $parameters - Specified additional parameters
- * @return void
+ * @return NodeEnder
  * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function component(string $name, array $parameters = []): void
+function component(string $name, array $parameters = []): NodeEnder
 {
-    RenderContextStack::current()->component($name, $parameters);
+    return RenderContextStack::current()->component($name, $parameters);
 }
 
 /**
- * Ends the last open {@see component} tag
+ * Ends the last open {@see component} node
  *
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException
@@ -33,22 +42,23 @@ function component_end(): void
 }
 
 /**
- * Starts the context of a slot within a component template to allow replacement of the slot content on demand.
- * Slot names must be unique within a component.
+ * Starts the context of a slot within a component to allow replacement of the slot content on demand.
+ * Reusing slot names within a component is allowed but may not work with parameters binding as only the last slot
+ * bindings will be used
  *
  * @param string $name - The slot name
  * @param array $bindings - Parameters to provide to the use-slots bindings
- * @return void
+ * @return NodeEnder
  * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function slot(string $name = 'default', array $bindings = []): void
+function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
 {
-    RenderContextStack::current()->slot($name, $bindings);
+    return RenderContextStack::current()->slot($name, $bindings);
 }
 
 /**
- * Ends the context of the last open {@see slot} tag.
+ * Ends the last open {@see slot} node
  *
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException
@@ -64,21 +74,21 @@ function slot_end(): void
  * Use-slot names must be unique within a component.
  *
  * Usage of 'default' {@see slot} is optional as an implicit one is created for content put directly within
- * {@see component} tags.
+ * {@see component} nodes.
  *
  * @param string $name - The used slot name
  * @param mixed $bindings - The slot bindings to access some exposed values
- * @return void
+ * @return NodeEnder
  * @throws \StefGodin\NoTmpl\Engine\EngineException
  * @noinspection PhpFullyQualifiedNameUsageInspection
  */
-function use_slot(string $name = 'default', mixed &$bindings = null): void
+function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
 {
-    RenderContextStack::current()->useSlot($name, $bindings);
+    return RenderContextStack::current()->useSlot($name, $bindings);
 }
 
 /**
- * Renders the content of the used parent slot
+ * Renders the content of the parent slot within a {@see use_slot} context
  *
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException
@@ -90,7 +100,7 @@ function parent_slot(): void
 }
 
 /**
- * Ends the context of the last open {@see use_slot} tag
+ * Ends the last open {@see use_slot} node
  *
  * @return void
  * @throws \StefGodin\NoTmpl\Engine\EngineException

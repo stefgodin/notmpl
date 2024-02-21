@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl\Engine;
@@ -17,34 +25,24 @@ class FileManager
     /**
      * @param string $name
      * @return string
-     * @throws \StefGodin\NoTmpl\Engine\EngineException
+     * @throws EngineException
      */
     public function resolve(string $name): string
     {
-        $filenames = array_unique([
-            $this->aliases[$name] ?? $name,
-            $name,
-        ]);
-        
-        $checkedPaths = [];
+        $filenames = array_filter([$this->aliases[$name] ?? null, $name]);
+        $directories = [...$this->directories, null];
         foreach($filenames as $filename) {
-            if(file_exists($filename)) {
-                return $filename;
-            }
-            $checkedPaths[] = '"' . $filename . '"';
-            
-            foreach($this->directories as $dir) {
-                $file = $dir . DIRECTORY_SEPARATOR . $filename;
+            foreach($directories as $dir) {
+                $file = $checkedPaths[] = ($dir ? $dir . DIRECTORY_SEPARATOR : '') . $filename;
                 if(file_exists($file)) {
                     return $file;
                 }
-                $checkedPaths[] = '"' . $file . '"';
             }
         }
         
-        throw new \StefGodin\NoTmpl\Engine\EngineException(
-            sprintf("Could not resolve template file '%s'. Checked for %s", $name, implode(', ', $checkedPaths)),
-            \StefGodin\NoTmpl\Engine\EngineException::FILE_NOT_FOUND
+        throw new EngineException(
+            sprintf("Could not resolve file '%s'. Checked for %s", $name, implode(', ', $checkedPaths)),
+            EngineException::FILE_NOT_FOUND
         );
     }
     
@@ -58,5 +56,10 @@ class FileManager
                 return;
             }
         }
+        
+        throw new EngineException(
+            sprintf("There are no defined handler for file '{$file}'"),
+            EngineException::NO_FILE_HANDLER
+        );
     }
 }

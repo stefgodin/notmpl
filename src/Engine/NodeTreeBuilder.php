@@ -1,22 +1,55 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl\Engine;
 
+use StefGodin\NoTmpl\Engine\Node\ChildNodeInterface;
+use StefGodin\NoTmpl\Engine\Node\NodeInterface;
+use StefGodin\NoTmpl\Engine\Node\ParentNodeInterface;
+use StefGodin\NoTmpl\Engine\Node\RawContentNode;
+use StefGodin\NoTmpl\Engine\Node\RootNode;
+
 /**
  * @internal
  */
-class ContentTreeBuilder
+class NodeTreeBuilder
 {
     private int|null $level;
     private bool $stopping;
-    private ContentTreeNode $currentNode;
+    private RootNode $rootNode;
+    private ParentNodeInterface $currentNode;
     
-    public function __construct(string $name)
+    public function __construct()
     {
         $this->level = null;
         $this->stopping = false;
-        $this->currentNode = new ContentTreeNode("root", $name);
+        $this->rootNode = new RootNode();
+        $this->currentNode = $this->rootNode;
+    }
+    
+    public function getCurrentNode(): ParentNodeInterface
+    {
+        return $this->currentNode;
+    }
+    
+    public function buildTree(): RootNode
+    {
+        if($this->currentNode !== $this->rootNode) {
+            throw new EngineException(
+                "{$this->currentNode->getType()} node was left open",
+                EngineException::INVALID_TREE_STRUCTURE
+            );
+        }
+        
+        return $this->rootNode;
     }
     
     /**
@@ -35,7 +68,7 @@ class ContentTreeBuilder
                 }
                 
                 if(!empty($buffer)) {
-                    $this->currentNode->addChildNode("content", $buffer);
+                    $this->currentNode->addChild(new RawContentNode($buffer));
                 }
                 
                 return "";
@@ -96,74 +129,65 @@ class ContentTreeBuilder
         return $this;
     }
     
-    public function isOpen(): bool
+    /**
+     * @param ChildNodeInterface $node
+     * @return $this
+     * @throws EngineException
+     */
+    public function addNode(ChildNodeInterface $node): static
+    {
+        $wasOpened = $this->isOpen();
+        if($wasOpened) {
+            $this->stopCapture();
+        }
+        
+        $this->currentNode->addChild($node);
+        $node->setParent($this->currentNode);
+        if($node instanceof ParentNodeInterface) {
+            $this->currentNode = $node;
+        }
+        
+        if($wasOpened) {
+            $this->startCapture();
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * @param class-string<NodeInterface>|NodeInterface $expect
+     * @return $this
+     * @throws EngineException
+     */
+    public function exitNode(string|NodeInterface $expect): static
+    {
+        if((is_string($expect) && $this->currentNode::getType() !== $expect)
+            || ($expect instanceof NodeInterface && $this->currentNode !== $expect)) {
+            $type = is_string($expect) ? $expect : $expect::getType();
+            throw new EngineException(
+                "Cannot end {$type} node, {$this->currentNode->getType()} node was left open",
+                EngineException::INVALID_TREE_STRUCTURE
+            );
+        }
+        
+        if($this->currentNode instanceof ChildNodeInterface) {
+            $wasOpened = $this->isOpen();
+            if($wasOpened) {
+                $this->stopCapture();
+            }
+            
+            $this->currentNode = $this->currentNode->getParent();
+            
+            if($wasOpened) {
+                $this->startCapture();
+            }
+        }
+        
+        return $this;
+    }
+    
+    private function isOpen(): bool
     {
         return $this->level !== null && ob_get_level() >= $this->level;
-    }
-    
-    /**
-     * @return ContentTreeNode
-     * @throws EngineException
-     */
-    public function buildContentTree(): ContentTreeNode
-    {
-        if(!$this->currentNode->isRoot()) {
-            throw new EngineException(
-                "Tag '{$this->currentNode->getType()}' was not closed",
-                EngineException::INVALID_TAG_STRUCTURE
-            );
-        }
-        
-        return $this->currentNode;
-    }
-    
-    /**
-     * @param string $type
-     * @param string $name
-     * @return $this
-     * @throws EngineException
-     */
-    public function openTag(string $type, string $name): static
-    {
-        $wasOpened = $this->isOpen();
-        if($wasOpened) {
-            $this->stopCapture();
-        }
-        
-        $this->currentNode = $this->currentNode->addChildNode($type, $name);
-        
-        if($wasOpened) {
-            $this->startCapture();
-        }
-        
-        return $this;
-    }
-    
-    /**
-     * @param string $type
-     * @return $this
-     * @throws EngineException
-     */
-    public function closeTag(string $type): static
-    {
-        $wasOpened = $this->isOpen();
-        if($wasOpened) {
-            $this->stopCapture();
-        }
-        
-        if($this->currentNode->getType() !== $type) {
-            throw new EngineException(
-                "Cannot end '{$this->currentNode->getType()}' tag with '{$type}'",
-                EngineException::INVALID_TAG_STRUCTURE
-            );
-        }
-        
-        $this->currentNode = $this->currentNode->getParent();
-        
-        if($wasOpened) {
-            $this->startCapture();
-        }
-        
-        return $this;
     }
 }

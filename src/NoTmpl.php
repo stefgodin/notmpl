@@ -1,51 +1,59 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl;
 
+use StefGodin\NoTmpl\Engine\DefaultFileHandlers;
 use StefGodin\NoTmpl\Engine\EngineException;
 use StefGodin\NoTmpl\Engine\FileManager;
-use StefGodin\NoTmpl\Engine\PhpFileHandler;
-use StefGodin\NoTmpl\Engine\RawFileHandler;
 use StefGodin\NoTmpl\Engine\RenderContext;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
 use Throwable;
 
 /**
- * Static object class to regroup all rendering functions of the NoTmpl library
+ * This class serves as the main entry point to the NoTMPL rendering engine.
+ *
+ * It allows for rendering file content with provided parameters, enabling dynamic content generation directly from
+ * PHP code.
  */
 class NoTmpl
 {
     private array $renderGlobalParams;
-    private array $templateDirectories;
-    private array $templateAliases;
+    private array $directories;
+    private array $aliases;
     private array $fileHandlers;
     
     public function __construct()
     {
         $this->renderGlobalParams = [];
-        $this->templateDirectories = [];
-        $this->templateAliases = [];
-        $this->fileHandlers = [
-            '/^.+\.php$/' => PhpFileHandler::render(...),
-            '/^.+\.html$/' => RawFileHandler::load(...),
-        ];
+        $this->directories = [];
+        $this->aliases = [];
+        $this->fileHandlers = [];
     }
     
     /**
-     * Renders a template content with given parameters as variables and returns the resulting rendered content as a string.
+     * Renders a file content with given parameters as variables and returns the resulting rendered content as a
+     * string.
      *
-     * @param string $file - The file to render, can be a component alias
-     * @param array $parameters - The parameters to be passed to the template
+     * @param string $file The file to render, can be a component alias
+     * @param array $parameters The parameters to be passed to the context
      * @return string
      * @throws EngineException
      */
     public function render(string $file, array $parameters = []): string
     {
         $fileManager = new FileManager(
-            $this->templateDirectories,
-            $this->templateAliases,
-            $this->fileHandlers,
+            $this->directories,
+            $this->aliases,
+            DefaultFileHandlers::merge($this->fileHandlers),
         );
         
         $renderContext = new RenderContext(
@@ -65,29 +73,71 @@ class NoTmpl
         return $result;
     }
     
+    /**
+     * Sets a global value to be passed into render contexts
+     *
+     * The 'name' is
+     *
+     * @param string $name The `$name` of the variable
+     * @param mixed $value The value set to the variable
+     * @return $this
+     */
     public function setRenderGlobalParam(string $name, mixed $value): static
     {
         $this->renderGlobalParams[$name] = $value;
         return $this;
     }
     
-    public function setRenderGlobalParams(array $values): static
+    /**
+     * Sets multiple global values to be passed into render contexts.
+     *
+     * @param array $values Key-value pair representing `['name' => value, ...]`
+     * @param bool $empty Removes all set global values beforehand
+     * @return $this
+     */
+    public function setRenderGlobalParams(array $values, bool $empty = false): static
     {
-        $this->renderGlobalParams = $values;
-        return $this;
-    }
-    
-    public function addDirectory(string $directory): static
-    {
-        if(!in_array($directory, $this->templateDirectories)) {
-            $this->templateDirectories[] = rtrim($directory, '/\\');
+        if($empty) {
+            $this->renderGlobalParams = [];
+        }
+        
+        foreach($values as $name => $value) {
+            $this->setRenderGlobalParam($name, $value);
         }
         
         return $this;
     }
     
-    public function addDirectories(array $directories): static
+    /**
+     * Adds a directory for searching files for render and components
+     *
+     * Works in conjunction with {@see NoTmpl::setAlias}
+     *
+     * @param string $directory The directory to search into
+     * @return $this
+     */
+    public function addDirectory(string $directory): static
     {
+        if(!in_array($directory, $this->directories)) {
+            $this->directories[] = rtrim($directory, '/\\');
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Adds a list of directories to search files for render and components
+     *
+     * @param array $directories The directories to search into
+     * @param bool $empty Removes all added directories beforehand
+     * @return $this
+     */
+    public function setDirectories(array $directories, bool $empty = false): static
+    {
+        if($empty) {
+            $this->directories = [];
+        }
+        
         foreach($directories as $directory) {
             $this->addDirectory($directory);
         }
@@ -95,46 +145,93 @@ class NoTmpl
         return $this;
     }
     
-    public function setDirectories(array $directories): static
-    {
-        $this->templateDirectories = [];
-        $this->addDirectories($directories);
-        return $this;
-    }
-    
+    /**
+     * Sets an alias make loading of specific easier
+     *
+     * ```php
+     * $noTmpl->setAlias('templates/index.php', 'index');
+     *
+     * $noTmpl->render('index');
+     * // or
+     * <?php component('index') ?>
+     * ```
+     *
+     *
+     * Aliasing also works in conjunction with {@see NoTmpl::addDirectory}
+     *
+     * The same example could be written like so
+     * ```php
+     * $noTmpl->addDirectory('templates')
+     *        ->setAlias('index.php', 'index');
+     *
+     * $noTmpl->render('index');
+     * ```
+     *
+     * @param string $file The file to alias
+     * @param string $alias The alternative name of the file
+     * @return $this
+     */
     public function setAlias(string $file, string $alias): static
     {
-        $this->templateAliases[$alias] = $file;
+        $this->aliases[$alias] = $file;
         return $this;
     }
     
-    public function setAliases(array $aliases): static
+    /**
+     * Sets many aliases at once
+     *
+     * @param array $aliases Key-value pair representing `['file' => 'alias']`
+     * @param bool $empty Removes all added aliases beforehand
+     * @return $this
+     */
+    public function setAliases(array $aliases, bool $empty = false): static
     {
-        $this->templateAliases = [];
+        if($empty) {
+            $this->aliases = [];
+        }
+        
         foreach($aliases as $file => $alias) {
             $this->setAlias($file, $alias);
         }
+        
         return $this;
     }
     
+    /**
+     * Adds a specific way to load files when file name matches a regex
+     *
+     * The callable given is used when loading file during render and for components.
+     * It will receive the following arguments:
+     *  - [0:string]  The file name resolved using configured aliases and directories
+     *  - [1:array] A context array with key-value pair representing contextual values merged with configured globals
+     *
+     * @param string $regex The regex a file name must match
+     * @param callable(string, array): void $handler Function that echoes out the content of the file
+     * @return $this
+     */
     public function addFileHandler(string $regex, callable $handler): static
     {
         $this->fileHandlers[$regex] = $handler;
         return $this;
     }
     
-    public function addFileHandlers(array $handlers): static
+    /**
+     * Sets multiple file handlers at once
+     *
+     * @param array $handlers Key-value pair representing `['/regex/' => callable(...)]`
+     * @param bool $empty Removes all added file handlers beforehand
+     * @return $this
+     */
+    public function setFileHandlers(array $handlers, bool $empty = false): static
     {
+        if($empty) {
+            $this->fileHandlers = [];
+        }
+        
         foreach($handlers as $regex => $handler) {
             $this->addFileHandler($regex, $handler);
         }
-        return $this;
-    }
-    
-    public function setFileHandlers(array $handlers): static
-    {
-        $this->fileHandlers = [];
-        $this->addFileHandlers($handlers);
+        
         return $this;
     }
 }

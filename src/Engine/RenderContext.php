@@ -1,13 +1,29 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl\Engine;
 
+use StefGodin\NoTmpl\Engine\Node\ComponentNode;
+use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
+use StefGodin\NoTmpl\Engine\Node\SlotNode;
+use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
+use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use Throwable;
 
+/**
+ * @internal
+ */
 class RenderContext
 {
-    private ContentTreeBuilder|null $contentTreeBuilder;
+    private NodeTreeBuilder|null $nodeTreeBuilder;
     private ScopeManager $scopeManager;
     
     public function __construct(
@@ -15,7 +31,7 @@ class RenderContext
         private readonly array       $globalParams,
     )
     {
-        $this->contentTreeBuilder = null;
+        $this->nodeTreeBuilder = null;
         $this->scopeManager = new ScopeManager();
     }
     
@@ -28,97 +44,137 @@ class RenderContext
      */
     public function render(string $name, array $params = []): string
     {
-        if($this->contentTreeBuilder !== null) {
+        if($this->nodeTreeBuilder !== null) {
             throw new EngineException("Cannot reuse same rendering context");
         }
         
-        $this->contentTreeBuilder = new ContentTreeBuilder($name);
+        $this->nodeTreeBuilder = new NodeTreeBuilder();
         
         try {
             $this->getContentTree()
                 ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
                 ->stopCapture();
             
-            $contentTree = $this->getContentTree()->buildContentTree();
+            $rootNode = $this->getContentTree()->buildTree();
             
-            $processor = new ContentTreeProcessor();
-            return $processor->processTree($contentTree);
+            return $rootNode->render();
         } catch(Throwable $e) {
-            $this->contentTreeBuilder?->stopCapture(true);
+            $this->nodeTreeBuilder?->stopCapture(true);
             throw $e;
         }
     }
     
+    /**
+     * @param string $name
+     * @param array $params
+     * @return NodeEnder
+     * @throws EngineException
+     */
     public function component(string $name, array $params)
     {
-        $this->getContentTree()
-            ->openTag("component", $name)
-            ->openTag("component_internal", $name);
-        
+        $ct = $this->getContentTree();
         $this->scopeManager->startNamespace();
-        $this->getContentTree()
+        $component = new ComponentNode();
+        $ct->addNode($component)
             ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
-            ->closeTag("component_internal")
-            ->openTag("component_external", $name)
-            ->startCapture();
+            ->exitNode($component);
         $this->scopeManager->useNamespace();
+        $ct->addNode(new UseComponentNode($component))
+            ->startCapture();
+        
+        return new NodeEnder($this->componentEnd(...));
     }
     
+    /**
+     * @return void
+     * @throws EngineException
+     */
     public function componentEnd()
     {
         $this->getContentTree()
-            ->closeTag("component_external")
-            ->closeTag("component")
+            ->exitNode(UseComponentNode::getType())
             ->startCapture();
         $this->scopeManager->endNamespace();
     }
     
-    public function slot(string $name, array $bindings = [])
+    /**
+     * @param string $name
+     * @param array $bindings
+     * @return NodeEnder
+     * @throws EngineException
+     */
+    public function slot(string $name, array $bindings = []): NodeEnder
     {
+        $slot = new SlotNode($name);
         $this->getContentTree()
-            ->openTag("slot", $name)
+            ->addNode($slot)
             ->startCapture();
         $this->scopeManager->defineScope($name, $bindings);
+        
+        return new NodeEnder($this->slotEnd(...));
     }
     
+    /**
+     * @return void
+     * @throws EngineException
+     */
     public function slotEnd()
     {
         $this->getContentTree()
-            ->closeTag("slot")
+            ->exitNode(SlotNode::getType())
             ->startCapture();
-        //        $this->scopeManager->endScopeDefine();
     }
     
-    public function useSlot(string $name, mixed &$bindings = null)
+    /**
+     * @param string $name
+     * @param mixed|null $bindings
+     * @return NodeEnder
+     * @throws EngineException
+     */
+    public function useSlot(string $name, mixed &$bindings = null): NodeEnder
     {
+        $useSlot = new UseSlotNode($name);
         $this->getContentTree()
-            ->openTag("use_slot", $name)
+            ->addNode($useSlot)
             ->startCapture();
         $this->scopeManager->useScope($name, $bindings);
+        
+        return new NodeEnder($this->useSlotEnd(...));
     }
     
-    public function parentSlot()
+    /**
+     * @return void
+     * @throws EngineException
+     */
+    public function parentSlot(): void
     {
         $this->getContentTree()
-            ->openTag("parent_slot", "parent_slot")
-            ->closeTag("parent_slot")
+            ->addNode(new ParentSlotNode())
             ->startCapture();
     }
     
-    public function useSlotEnd()
+    /**
+     * @return void
+     * @throws EngineException
+     */
+    public function useSlotEnd(): void
     {
         $this->getContentTree()
-            ->closeTag("use_slot")
+            ->exitNode(UseSlotNode::getType())
             ->startCapture();
-        $this->scopeManager->resetUseScope();
+        $this->scopeManager->leaveScope();
     }
     
-    private function getContentTree(): ContentTreeBuilder
+    /**
+     * @return NodeTreeBuilder
+     * @throws EngineException
+     */
+    private function getContentTree(): NodeTreeBuilder
     {
-        if($this->contentTreeBuilder === null) {
+        if($this->nodeTreeBuilder === null) {
             throw new EngineException("Rendering context is closed", EngineException::NO_CONTEXT);
         }
         
-        return $this->contentTreeBuilder;
+        return $this->nodeTreeBuilder;
     }
 }

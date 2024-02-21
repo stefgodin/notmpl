@@ -1,34 +1,46 @@
 <?php
+/*
+ * This file is part of the NoTMPL package.
+ *
+ * (c) Stéphane Godin
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
 
 
 namespace StefGodin\NoTmpl\Engine;
 
+/**
+ * @internal
+ * @private
+ */
 class ScopeManager
 {
-    private array $ns;
+    private array $definedNs;
     private array $usedNs;
-    private array $previousBindingsStack = [];
-    private array $bindingsRefStack = [];
+    private array $previousBindings = [];
+    private array $bindingRefs = [];
     
     public function __construct()
     {
-        $this->ns = [];
+        $this->definedNs = [];
     }
     
     public function startNamespace(): void
     {
-        $this->ns[] = [];
+        $this->definedNs[] = [];
     }
     
     public function useNamespace(): void
     {
-        if(empty($this->ns)) {
+        if(empty($this->definedNs)) {
             return;
         }
         
-        $index = array_key_last($this->ns);
-        $this->usedNs[] = $this->ns[$index];
-        unset($this->ns[$index]);
+        $index = array_key_last($this->definedNs);
+        $this->usedNs[] = $this->definedNs[$index];
+        unset($this->definedNs[$index]);
     }
     
     public function endNamespace(): void
@@ -42,26 +54,11 @@ class ScopeManager
     
     public function defineScope(string $name, array $bindings): void
     {
-        if(empty($this->ns)) {
-            $this->startNamespace();
-        }
-        
-        $this->ns[array_key_last($this->ns)][$name] = $bindings;
-    }
-    
-    public function endScopeDefine(): void
-    {
-        if(empty($this->ns)) {
+        if(empty($this->definedNs)) {
             return;
         }
         
-        $namespaceIndex = array_key_last($this->ns);
-        
-        if(empty($this->ns[$namespaceIndex])) {
-            return;
-        }
-        
-        unset($this->ns[$namespaceIndex][array_key_last($this->ns[$namespaceIndex])]);
+        $this->definedNs[array_key_last($this->definedNs)][$name] = $bindings;
     }
     
     public function useScope(string $name, mixed &$bindings): void
@@ -72,20 +69,20 @@ class ScopeManager
             $newBindings = $this->usedNs[$namespaceIndex][$name] ?? [];
         }
         
-        $this->previousBindingsStack[] = $bindings;
-        $this->bindingsRefStack[] = &$bindings;
+        $this->previousBindings[] = $bindings;
+        $this->bindingRefs[] = &$bindings;
         $bindings = $newBindings;
     }
     
-    public function resetUseScope(): void
+    public function leaveScope(): void
     {
-        if(empty($this->previousBindingsStack)) {
+        if(empty($this->previousBindings)) {
             return;
         }
         
-        $index = array_key_last($this->previousBindingsStack);
-        $this->bindingsRefStack[$index] = $this->previousBindingsStack[$index];
-        unset($this->previousBindingsStack[$index]);
-        unset($this->bindingsRefStack[$index]);
+        $index = array_key_last($this->previousBindings);
+        $this->bindingRefs[$index] = $this->previousBindings[$index];
+        unset($this->previousBindings[$index]);
+        unset($this->bindingRefs[$index]);
     }
 }
