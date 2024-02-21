@@ -20,6 +20,11 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
     
     private SlotNode|null $parentSlot;
     
+    /**
+     * @param ParentNodeInterface $node
+     * @return void
+     * @throws EngineException
+     */
     public function setParent(ParentNodeInterface $node): void
     {
         $this->parent = $node;

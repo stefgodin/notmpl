@@ -47,6 +47,7 @@ class NoTmpl
      * @param array $parameters The parameters to be passed to the context
      * @return string
      * @throws EngineException
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public function render(string $file, array $parameters = []): string
     {

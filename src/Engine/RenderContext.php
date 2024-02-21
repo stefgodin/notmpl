@@ -70,7 +70,7 @@ class RenderContext
      * @return NodeEnder
      * @throws EngineException
      */
-    public function component(string $name, array $params)
+    public function component(string $name, array $params): NodeEnder
     {
         $ct = $this->getContentTree();
         $this->scopeManager->startNamespace();
@@ -89,7 +89,7 @@ class RenderContext
      * @return void
      * @throws EngineException
      */
-    public function componentEnd()
+    public function componentEnd(): void
     {
         $this->getContentTree()
             ->exitNode(UseComponentNode::getType())
@@ -118,7 +118,7 @@ class RenderContext
      * @return void
      * @throws EngineException
      */
-    public function slotEnd()
+    public function slotEnd(): void
     {
         $this->getContentTree()
             ->exitNode(SlotNode::getType())

@@ -26,6 +26,11 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
         $component->setUseComponent($this);
     }
     
+    /**
+     * @param ParentNodeInterface $node
+     * @return void
+     * @throws \StefGodin\NoTmpl\Engine\EngineException
+     */
     public function setParent(ParentNodeInterface $node): void
     {
         $this->parent = $node;

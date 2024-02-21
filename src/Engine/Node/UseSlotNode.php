@@ -23,6 +23,11 @@ class UseSlotNode implements NodeInterface, ParentNodeInterface, ChildNodeInterf
         private readonly string $slotName = ComponentNode::DEFAULT_SLOT,
     ) {}
     
+    /**
+     * @param ParentNodeInterface $node
+     * @return void
+     * @throws EngineException
+     */
     public function setParent(ParentNodeInterface $node): void
     {
         if(!$node instanceof UseComponentNode) {

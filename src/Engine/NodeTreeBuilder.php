@@ -35,11 +35,10 @@ class NodeTreeBuilder
         $this->currentNode = $this->rootNode;
     }
     
-    public function getCurrentNode(): ParentNodeInterface
-    {
-        return $this->currentNode;
-    }
-    
+    /**
+     * @return RootNode
+     * @throws EngineException
+     */
     public function buildTree(): RootNode
     {
         if($this->currentNode !== $this->rootNode) {

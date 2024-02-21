@@ -16,10 +16,10 @@ use Stringable;
 /**
  * Stringifies the mixed value and escapes the value for html and quoted html attributes
  *
- * Can be used for escaping untrusted values put into HTML. The function will also work for quoted HTML attributes
+ * Can be used for escaping untrusted values put into HTML. The function will also work for quoted HTML attributes,
  * but it won't work for illegally quoted or unquoted HTML attributes.
  *
- * If you need better escaping rules or escaping JS and CSS, consider using laminas-escaper
+ * If you need better escaping rules or need escaping JS and CSS, consider using laminas-escaper
  * {@link https://packagist.org/packages/laminas/laminas-escaper}
  *
  * @param mixed $value

@@ -31,6 +31,7 @@ class FileManager
     {
         $filenames = array_filter([$this->aliases[$name] ?? null, $name]);
         $directories = [...$this->directories, null];
+        $checkedPaths = [];
         foreach($filenames as $filename) {
             foreach($directories as $dir) {
                 $file = $checkedPaths[] = ($dir ? $dir . DIRECTORY_SEPARATOR : '') . $filename;
@@ -46,6 +47,12 @@ class FileManager
         );
     }
     
+    /**
+     * @param string $name
+     * @param array $params
+     * @return void
+     * @throws EngineException
+     */
     public function handle(string $name, array $params): void
     {
         $file = $this->resolve($name);
@@ -58,7 +65,7 @@ class FileManager
         }
         
         throw new EngineException(
-            sprintf("There are no defined handler for file '{$file}'"),
+            "There are no defined handler for file '{$file}'",
             EngineException::NO_FILE_HANDLER
         );
     }
