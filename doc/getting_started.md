@@ -63,6 +63,20 @@ use function StefGodin\NoTmpl\{component, component_end};
 <div>This is the page content</div>
 ```
 
+### Auto-resolving .php
+
+Files names needs no .php extensions by default as they are automatically resolved.
+
+```php
+use StefGodin\NoTmpl\NoTmpl;
+
+$noTmpl = new NoTmpl();
+echo $noTmpl->render(__DIR__.'/templates/page'/* .php is implicit */);
+```
+
+Obviously if a `/templates/page` existed, it would be loaded instead of `templates/page.php`. Check the 
+[Advanced Usage](./advanced.md) section to learn more
+
 ### Directory Configuration
 
 NoTMPL allows you to configure directories to streamline the referencing of template files. Instead of specifying the
@@ -81,10 +95,10 @@ With the directory added, you can simply reference the template file by its name
 ### Aliasing
 
 In addition to directory configuration, NoTMPL supports aliasing to provide shorter and more intuitive names for your
-templates. This is particularly useful for frequently used templates.
+templates. This is particularly useful for frequently used templates that are deeply nested.
 
 ```php
-$noTmpl->setAlias('page.php', 'page');
+$noTmpl->setAlias('path/to/page.php', 'page');
 echo $noTmpl->render('page');
 ```
 

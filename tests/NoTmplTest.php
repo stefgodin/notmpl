@@ -136,6 +136,27 @@ class NoTmplTest extends TestCase
         }
     }
     
+    /** @test */
+    public function complex_example(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/complex_example'])
+            ->setAlias('components/logo', 'logo')
+            ->setAlias('components/footer', 'footer')
+            ->addAutoResolvedExtensions('html')
+            ->setRenderGlobalParam('products', [
+                ['id' => 1, 'name' => 'Cookies', 'price' => 10],
+                ['id' => 2, 'name' => 'Potato', 'price' => 1],
+                ['id' => 3, 'name' => 'Bread', 'price' => 25],
+                ['id' => 4, 'name' => 'Eggs', 'price' => 5],
+            ]);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/complex_example/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php', ['title' => 'Page <span attr="injection"></span>'])),
+        );
+    }
+    
     private static function tmpl(string $file): string
     {
         return self::removeWhitespace(file_get_contents($file));
@@ -143,6 +164,6 @@ class NoTmplTest extends TestCase
     
     private static function removeWhitespace(string $value): string
     {
-        return preg_replace("/\s/", "", $value);
+        return preg_replace("/\s+(<)|(>)\s+/", "$1$2", $value);
     }
 }

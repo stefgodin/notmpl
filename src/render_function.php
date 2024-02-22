@@ -18,11 +18,10 @@ use StefGodin\NoTmpl\Engine\RenderContextStack;
 /**
  * Starts a component block and loads a specific file for it.
  *
- * @param string $name - The component to render
- * @param array $parameters - Specified additional parameters
+ * @param string $name The component to render
+ * @param array $parameters Specified additional parameters
  * @return NodeEnder
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function component(string $name, array $parameters = []): NodeEnder
 {
@@ -33,8 +32,7 @@ function component(string $name, array $parameters = []): NodeEnder
  * Ends the last open {@see component} node
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function component_end(): void
 {
@@ -46,11 +44,10 @@ function component_end(): void
  * Reusing slot names within a component is allowed but may not work with parameters binding as only the last slot
  * bindings will be used
  *
- * @param string $name - The slot name
- * @param array $bindings - Parameters to provide to the use-slots bindings
+ * @param string $name The slot name
+ * @param array $bindings Parameters to provide to the use-slots bindings
  * @return NodeEnder
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
 {
@@ -61,8 +58,7 @@ function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []):
  * Ends the last open {@see slot} node
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function slot_end(): void
 {
@@ -76,11 +72,10 @@ function slot_end(): void
  * Usage of 'default' {@see slot} is optional as an implicit one is created for content put directly within
  * {@see component} nodes.
  *
- * @param string $name - The used slot name
- * @param mixed $bindings - The slot bindings to access some exposed values
+ * @param string $name The used slot name
+ * @param mixed|array &$bindings The slot bindings to access some exposed values
  * @return NodeEnder
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
 {
@@ -91,8 +86,7 @@ function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings =
  * Renders the content of the parent slot within a {@see use_slot} context
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function parent_slot(): void
 {
@@ -100,11 +94,10 @@ function parent_slot(): void
 }
 
 /**
- * Ends the last open {@see use_slot} node
+ * Ends the last open {@see use_slot} node and resets the bindings variable referenced to its original value
  *
  * @return void
- * @throws \StefGodin\NoTmpl\Engine\EngineException
- * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpDocMissingThrowsInspection
  */
 function use_slot_end(): void
 {

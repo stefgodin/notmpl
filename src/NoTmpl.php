@@ -29,6 +29,7 @@ class NoTmpl
     private array $renderGlobalParams;
     private array $directories;
     private array $aliases;
+    private array $autoResolvedExtensions;
     private array $fileHandlers;
     
     public function __construct()
@@ -37,6 +38,7 @@ class NoTmpl
         $this->directories = [];
         $this->aliases = [];
         $this->fileHandlers = [];
+        $this->autoResolvedExtensions = ['php'];
     }
     
     /**
@@ -54,6 +56,7 @@ class NoTmpl
         $fileManager = new FileManager(
             $this->directories,
             $this->aliases,
+            $this->autoResolvedExtensions,
             DefaultFileHandlers::merge($this->fileHandlers),
         );
         
@@ -93,7 +96,7 @@ class NoTmpl
      * Sets multiple global values to be passed into render contexts.
      *
      * @param array $values Key-value pair representing `['name' => value, ...]`
-     * @param bool $empty Removes all set global values beforehand
+     * @param bool $empty Removes all previously set global values
      * @return $this
      */
     public function setRenderGlobalParams(array $values, bool $empty = false): static
@@ -130,7 +133,7 @@ class NoTmpl
      * Adds a list of directories to search files for render and components
      *
      * @param array $directories The directories to search into
-     * @param bool $empty Removes all added directories beforehand
+     * @param bool $empty Removes all previously set directories
      * @return $this
      */
     public function setDirectories(array $directories, bool $empty = false): static
@@ -182,7 +185,7 @@ class NoTmpl
      * Sets many aliases at once
      *
      * @param array $aliases Key-value pair representing `['file' => 'alias']`
-     * @param bool $empty Removes all added aliases beforehand
+     * @param bool $empty Removes all previously set aliases
      * @return $this
      */
     public function setAliases(array $aliases, bool $empty = false): static
@@ -193,6 +196,39 @@ class NoTmpl
         
         foreach($aliases as $file => $alias) {
             $this->setAlias($file, $alias);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Adds an extension to be auto-resolved when giving incomplete paths
+     *
+     * @param string $extension Extension to be auto-resolved
+     * @return $this
+     */
+    public function addAutoResolvedExtensions(string $extension): static
+    {
+        $this->autoResolvedExtensions[] = $extension;
+        $this->autoResolvedExtensions = array_values(array_unique($this->autoResolvedExtensions));
+        return $this;
+    }
+    
+    /**
+     * Adds multiple extensions to be auto-resolved at once
+     *
+     * @param array $extensions Extensions to be auto-resolved
+     * @param bool $empty Removes all previously set extensions
+     * @return $this
+     */
+    public function setAutoResolvedExtensions(array $extensions, bool $empty = false): static
+    {
+        if($empty) {
+            $this->autoResolvedExtensions = [];
+        }
+        
+        foreach($extensions as $extension) {
+            $this->addAutoResolvedExtensions($extension);
         }
         
         return $this;

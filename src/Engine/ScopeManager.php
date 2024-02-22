@@ -11,10 +11,6 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
-/**
- * @internal
- * @private
- */
 class ScopeManager
 {
     private array $definedNs;

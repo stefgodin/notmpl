@@ -28,6 +28,6 @@ manipulate the output, or prevent content from being sent prematurely.
 Output buffering provides a flexible way to manipulate and control output in PHP scripts, enabling tasks like template
 processing.
 
-The NoTMPL engine simply uses output buffering to control content echoed between its tag and then builds a tree of tag
+The NoTMPL engine simply uses output buffering to control content echoed between its tags and then builds a tree of tag
 with their respective content. The tree can then be processed and reworked to display only the parts needed and merge
 others according to its internal logic.

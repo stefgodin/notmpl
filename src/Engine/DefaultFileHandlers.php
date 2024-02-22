@@ -11,9 +11,6 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
-/**
- * @internal
- */
 class DefaultFileHandlers
 {
     const PHP = '/^.+\.php$/';

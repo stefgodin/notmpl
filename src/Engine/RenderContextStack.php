@@ -11,9 +11,6 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
-/**
- * @internal
- */
 class RenderContextStack
 {
     /** @var RenderContext[] */
@@ -32,6 +29,6 @@ class RenderContextStack
             );
         }
         
-        return self::$stack[count(self::$stack) - 1];
+        return self::$stack[array_key_last(self::$stack)];
     }
 }

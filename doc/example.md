@@ -1,4 +1,4 @@
-# Building an example
+# Learn by Example
 
 The main aspect of a rendering engine is to allow for some sort of template composition. The NoTMPL uses a simple
 composition API made of a few namespaced functions. These allow for most extensibility needs within a template engine.

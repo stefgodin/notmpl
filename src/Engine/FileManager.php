@@ -11,14 +11,12 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
-/**
- * @internal
- */
 class FileManager
 {
     public function __construct(
         private readonly array $directories,
         private readonly array $aliases,
+        private readonly array $autoResolveExtensions,
         private readonly array $handlers,
     ) {}
     
@@ -30,6 +28,12 @@ class FileManager
     public function resolve(string $name): string
     {
         $filenames = array_filter([$this->aliases[$name] ?? null, $name]);
+        foreach($this->autoResolveExtensions as $extension) {
+            foreach($filenames as $filename) {
+                $filenames[] = "{$filename}.{$extension}";
+            }
+        }
+        
         $directories = [...$this->directories, null];
         $checkedPaths = [];
         foreach($filenames as $filename) {

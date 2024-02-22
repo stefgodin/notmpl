@@ -17,9 +17,6 @@ use StefGodin\NoTmpl\Engine\Node\ParentNodeInterface;
 use StefGodin\NoTmpl\Engine\Node\RawContentNode;
 use StefGodin\NoTmpl\Engine\Node\RootNode;
 
-/**
- * @internal
- */
 class NodeTreeBuilder
 {
     private int|null $level;

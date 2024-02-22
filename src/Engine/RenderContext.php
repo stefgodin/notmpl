@@ -18,9 +18,6 @@ use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
 use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use Throwable;
 
-/**
- * @internal
- */
 class RenderContext
 {
     private NodeTreeBuilder|null $nodeTreeBuilder;
@@ -127,7 +124,7 @@ class RenderContext
     
     /**
      * @param string $name
-     * @param mixed|null $bindings
+     * @param mixed|array &$bindings
      * @return NodeEnder
      * @throws EngineException
      */
