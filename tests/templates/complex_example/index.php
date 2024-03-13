@@ -1,6 +1,14 @@
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end, esc_html, parent_slot, slot, slot_end, use_slot, use_slot_end};
+use function StefGodin\NoTmpl\{component,
+    component_end,
+    esc_html,
+    parent_slot,
+    slot,
+    slot_end,
+    use_repeat_slots,
+    use_slot,
+    use_slot_end};
 
 /**
  * @var string $title
@@ -15,6 +23,7 @@ $links = [
 
 /** @formatter:off */
 ?>
+<div>Before</div>
 <?php slot('head', ['links' => $links]) ?>
     <div>
         <?php component('components/menu', ['links' => $links]) ?>
@@ -30,7 +39,7 @@ $links = [
             <?php use_slot_end() ?>
 
             <span attr="<?= esc_html($title) ?>"><?= $title ?></span>
-              <?php parent_slot() ?>
+            <?php parent_slot() ?>
             <span><?= esc_html($title.' '.gettype($binds)) ?></span>
         <?php component_end() ?>
     </div>
@@ -38,7 +47,18 @@ $links = [
 
 <div>
     <?php slot() ?>
-        <?php component('components/products')->end() ?>
+        <?php component('components/products') ?>
+            <?php use_slot('name', $bindings) ?>
+                FIRST!
+            <?php use_slot_end() ?>
+    
+            <?php foreach($it = use_repeat_slots('name') as $k => $bindings): ?>
+                <span><?php parent_slot() ?>(<?= $bindings['product']['id'] ?>) : <?= $k ?></span>
+                <?php if($k === 2){ ?>
+                    <?php $it->end(); break; ?>
+                <?php } ?>
+            <?php endforeach ?>
+        <?php component_end() ?>
     <?php slot_end() ?>
 </div>
 

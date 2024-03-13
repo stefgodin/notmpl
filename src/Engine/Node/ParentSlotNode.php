@@ -29,8 +29,6 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
     {
         $this->parent = $node;
         
-        $useSlot = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseSlotNode);
-        $slotName = $useSlot instanceof UseSlotNode ? $useSlot->getSlotName() : ComponentNode::DEFAULT_SLOT;
         $useComponent = NodeHelper::climbUntil($node,
             fn(NodeInterface $n) => $n instanceof ComponentNode || $n instanceof UseComponentNode);
         
@@ -41,7 +39,13 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
             );
         }
         
-        $this->parentSlot = $useComponent->getComponent()->getSlot($slotName);
+        $useSlot = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseSlotNode);
+        $slotName = $useSlot instanceof UseSlotNode ? $useSlot->getSlotName() : ComponentNode::DEFAULT_SLOT;
+        
+        $this->parentSlot = $useComponent->getComponent()->getSlot(
+            $slotName,
+            $useComponent->getLastUseSlotIndex($slotName),
+        );
     }
     
     public function render(): string

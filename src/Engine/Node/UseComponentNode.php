@@ -24,6 +24,7 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
     )
     {
         $component->setUseComponent($this);
+        $this->useSlots = [];
     }
     
     /**
@@ -46,10 +47,14 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
     public function addChild(ChildNodeInterface $node): void
     {
         if($node instanceof UseSlotNode) {
-            $this->useSlots[$node->getSlotName()] = $node;
+            $name = $node->getSlotName();
+            if(empty($this->useSlots)) {
+                $this->useSlots = [];
+            }
+            
+            $this->useSlots[$name][] = $node;
         } else {
             $this->defaultUseSlot->addChild($node);
-            $node->setParent($this->defaultUseSlot);
         }
     }
     
@@ -61,9 +66,32 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
         ));
     }
     
-    public function getUseSlot(string $name): UseSlotNode|null
+    public function getUseSlot(string $name, int $index): UseSlotNode|null
     {
-        return $this->useSlots[$name] ?? ($name === ComponentNode::DEFAULT_SLOT ? $this->defaultUseSlot : null);
+        if($index === 0 && empty($this->useSlots[$name]) && $name === ComponentNode::DEFAULT_SLOT) {
+            return $this->defaultUseSlot;
+        }
+        
+        return $this->useSlots[$name][$index] ?? null;
+    }
+    
+    public function getLastUseSlotIndex(string $name): int
+    {
+        if(empty($this->useSlots[$name]) && $name === ComponentNode::DEFAULT_SLOT) {
+            return 0;
+        }
+        
+        return array_key_last($this->useSlots[$name] ?? []) ?? -1;
+    }
+    
+    public function getUseSlotIndex(UseSlotNode $node): int
+    {
+        if($node === $this->defaultUseSlot) {
+            return empty($this->useSlots[ComponentNode::DEFAULT_SLOT]) ? 0 : -1;
+        }
+        
+        $index = array_search($node, $this->useSlots[$node->getSlotName()] ?? []);
+        return $index !== false ? $index : -1;
     }
     
     public function render(): string

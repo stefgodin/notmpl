@@ -11,19 +11,20 @@
 
 namespace StefGodin\NoTmpl;
 
+use StefGodin\NoTmpl\Engine\EnderInterface;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
-use StefGodin\NoTmpl\Engine\NodeEnder;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
+use Traversable;
 
 /**
  * Starts a component block and loads a specific file for it.
  *
  * @param string $name The component to render
  * @param array $parameters Specified additional parameters
- * @return NodeEnder
+ * @return EnderInterface
  * @noinspection PhpDocMissingThrowsInspection
  */
-function component(string $name, array $parameters = []): NodeEnder
+function component(string $name, array $parameters = []): EnderInterface
 {
     return RenderContextStack::current()->component($name, $parameters);
 }
@@ -46,10 +47,10 @@ function component_end(): void
  *
  * @param string $name The slot name
  * @param array $bindings Parameters to provide to the use-slots bindings
- * @return NodeEnder
+ * @return EnderInterface
  * @noinspection PhpDocMissingThrowsInspection
  */
-function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
+function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): EnderInterface
 {
     return RenderContextStack::current()->slot($name, $bindings);
 }
@@ -74,10 +75,10 @@ function slot_end(): void
  *
  * @param string $name The used slot name
  * @param mixed|array &$bindings The slot bindings to access some exposed values
- * @return NodeEnder
+ * @return EnderInterface
  * @noinspection PhpDocMissingThrowsInspection
  */
-function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
+function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): EnderInterface
 {
     return RenderContextStack::current()->useSlot($name, $bindings);
 }
@@ -102,4 +103,16 @@ function parent_slot(): void
 function use_slot_end(): void
 {
     RenderContextStack::current()->useSlotEnd();
+}
+
+/**
+ *
+ *
+ * @param string $name
+ * @return Traversable&EnderInterface
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function use_repeat_slots(string $name): Traversable&EnderInterface
+{
+    return RenderContextStack::current()->useRepeatSlots($name);
 }

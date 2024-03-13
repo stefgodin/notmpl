@@ -1,5 +1,7 @@
 <?php
 
+use function StefGodin\NoTmpl\{slot, slot_end};
+
 /**
  * @var array $products
  */
@@ -17,9 +19,9 @@
     <tbody>
         <?php foreach($products as $product): ?>
             <tr>
-                <td><?= $product['id'] ?></td>
-                <td><?= $product['name'] ?></td>
-                <td><?= $product['price'] ?></td>
+                <td><?php slot('id', ['product' => $product]) ?><?= $product['id'] ?><?php slot_end() ?></td>
+                <td><?php slot('name', ['product' => $product]) ?><?= $product['name'] ?><?php slot_end() ?></td>
+                <td><?php slot('price', ['product' => $product]) ?><?= $product['price'] ?><?php slot_end() ?></td>
             </tr>
         <?php endforeach ?>
     </tbody>

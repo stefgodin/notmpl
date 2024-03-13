@@ -12,16 +12,18 @@
 namespace StefGodin\NoTmpl\Engine;
 
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
+use StefGodin\NoTmpl\Engine\Node\NodeHelper;
+use StefGodin\NoTmpl\Engine\Node\NodeInterface;
 use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
 use StefGodin\NoTmpl\Engine\Node\SlotNode;
 use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
 use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use Throwable;
+use Traversable;
 
 class RenderContext
 {
     private NodeTreeBuilder|null $nodeTreeBuilder;
-    private ScopeManager $scopeManager;
     
     public function __construct(
         private readonly FileManager $fileManager,
@@ -29,7 +31,6 @@ class RenderContext
     )
     {
         $this->nodeTreeBuilder = null;
-        $this->scopeManager = new ScopeManager();
     }
     
     /**
@@ -48,11 +49,10 @@ class RenderContext
         $this->nodeTreeBuilder = new NodeTreeBuilder();
         
         try {
-            $this->getContentTree()
-                ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
-                ->stopCapture();
+            $this->getNodeTree()
+                ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)));
             
-            $rootNode = $this->getContentTree()->buildTree();
+            $rootNode = $this->getNodeTree()->buildTree();
             
             return $rootNode->render();
         } catch(Throwable $e) {
@@ -64,19 +64,16 @@ class RenderContext
     /**
      * @param string $name
      * @param array $params
-     * @return NodeEnder
+     * @return EnderInterface
      * @throws EngineException
      */
-    public function component(string $name, array $params): NodeEnder
+    public function component(string $name, array $params): EnderInterface
     {
-        $ct = $this->getContentTree();
-        $this->scopeManager->startNamespace();
-        $component = new ComponentNode();
-        $ct->addNode($component)
+        $this->getNodeTree()
+            ->addNode($component = new ComponentNode())
             ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
-            ->exitNode($component);
-        $this->scopeManager->useNamespace();
-        $ct->addNode(new UseComponentNode($component))
+            ->exitNode($component)
+            ->addNode(new UseComponentNode($component))
             ->startCapture();
         
         return new NodeEnder($this->componentEnd(...));
@@ -88,25 +85,22 @@ class RenderContext
      */
     public function componentEnd(): void
     {
-        $this->getContentTree()
+        $this->getNodeTree()
             ->exitNode(UseComponentNode::getType())
             ->startCapture();
-        $this->scopeManager->endNamespace();
     }
     
     /**
      * @param string $name
      * @param array $bindings
-     * @return NodeEnder
+     * @return EnderInterface
      * @throws EngineException
      */
-    public function slot(string $name, array $bindings = []): NodeEnder
+    public function slot(string $name, array $bindings = []): EnderInterface
     {
-        $slot = new SlotNode($name);
-        $this->getContentTree()
-            ->addNode($slot)
+        $this->getNodeTree()
+            ->addNode(new SlotNode($name, $bindings))
             ->startCapture();
-        $this->scopeManager->defineScope($name, $bindings);
         
         return new NodeEnder($this->slotEnd(...));
     }
@@ -117,7 +111,7 @@ class RenderContext
      */
     public function slotEnd(): void
     {
-        $this->getContentTree()
+        $this->getNodeTree()
             ->exitNode(SlotNode::getType())
             ->startCapture();
     }
@@ -125,16 +119,14 @@ class RenderContext
     /**
      * @param string $name
      * @param mixed|array &$bindings
-     * @return NodeEnder
+     * @return EnderInterface
      * @throws EngineException
      */
-    public function useSlot(string $name, mixed &$bindings = null): NodeEnder
+    public function useSlot(string $name, mixed &$bindings = null): EnderInterface
     {
-        $useSlot = new UseSlotNode($name);
-        $this->getContentTree()
-            ->addNode($useSlot)
+        $this->getNodeTree()
+            ->addNode(new UseSlotNode($name, $bindings))
             ->startCapture();
-        $this->scopeManager->useScope($name, $bindings);
         
         return new NodeEnder($this->useSlotEnd(...));
     }
@@ -145,7 +137,7 @@ class RenderContext
      */
     public function parentSlot(): void
     {
-        $this->getContentTree()
+        $this->getNodeTree()
             ->addNode(new ParentSlotNode())
             ->startCapture();
     }
@@ -156,17 +148,35 @@ class RenderContext
      */
     public function useSlotEnd(): void
     {
-        $this->getContentTree()
+        $this->getNodeTree()
             ->exitNode(UseSlotNode::getType())
             ->startCapture();
-        $this->scopeManager->leaveScope();
+    }
+    
+    public function useRepeatSlots(string $name): Traversable&EnderInterface
+    {
+        $node = $this->nodeTreeBuilder->getCurrentNode();
+        /** @var UseComponentNode|null $useComponent */
+        $useComponent = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseComponentNode);
+        $startIndex = ($useComponent?->getLastUseSlotIndex($name) ?? -2) + 1;
+        $endIndex = ($useComponent?->getComponent()->getSlotCount($name) ?? 0) - 1;
+        
+        return new NodeBuilderIterator(
+            function() use ($name) {
+                $this->useSlot($name, $bindings);
+                return $bindings;
+            },
+            fn() => $this->useSlotEnd(),
+            $startIndex,
+            $endIndex
+        );
     }
     
     /**
      * @return NodeTreeBuilder
      * @throws EngineException
      */
-    private function getContentTree(): NodeTreeBuilder
+    private function getNodeTree(): NodeTreeBuilder
     {
         if($this->nodeTreeBuilder === null) {
             throw new EngineException("Rendering context is closed", EngineException::NO_CONTEXT);

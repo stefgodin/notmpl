@@ -23,6 +23,7 @@ class SlotNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface
     
     public function __construct(
         private readonly string $name = ComponentNode::DEFAULT_SLOT,
+        private readonly array  $bindings = [],
     ) {}
     
     public function setParent(ParentNodeInterface $node): void
@@ -40,11 +41,16 @@ class SlotNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface
     
     public function render(): string
     {
-        return $this->component?->getUseSlot($this->name)?->render() ?? $this->renderAsIs();
+        return $this->component?->getUseSlot($this)?->render() ?? $this->renderAsIs();
     }
     
     public function getName(): string
     {
         return $this->name;
+    }
+    
+    public function getBindings(): array
+    {
+        return $this->bindings;
     }
 }

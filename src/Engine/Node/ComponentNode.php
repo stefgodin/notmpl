@@ -19,7 +19,7 @@ class ComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInte
     use ParentNodeTrait;
     use TypeTrait;
     
-    /** @var SlotNode[] */
+    /** @var SlotNode[][] */
     private array $slots;
     private UseComponentNode|null $useComponent;
     
@@ -32,13 +32,17 @@ class ComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInte
     public function addSlot(SlotNode $node): void
     {
         if($node->getComponent() === $this) {
-            $this->slots[$node->getName()] = $node;
+            $name = $node->getName();
+            if(empty($this->slots[$name])) {
+                $this->slots[$name] = [];
+            }
+            $this->slots[$name][] = $node;
         }
     }
     
-    public function getSlot(string $slotName = self::DEFAULT_SLOT): SlotNode|null
+    public function getSlot(string $name, int $index): SlotNode|null
     {
-        return $this->slots[$slotName] ?? null;
+        return $this->slots[$name][$index] ?? null;
     }
     
     public function setUseComponent(UseComponentNode $node): void
@@ -48,8 +52,14 @@ class ComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInte
         }
     }
     
-    public function getUseSlot(string $slotName = self::DEFAULT_SLOT): UseSlotNode|null
+    public function getUseSlot(SlotNode $slot): UseSlotNode|null
     {
-        return $this->useComponent?->getUseSlot($slotName);
+        $index = array_search($slot, $this->slots[$slot->getName()], true);
+        return $index !== false ? $this->useComponent?->getUseSlot($slot->getName(), $index) : null;
+    }
+    
+    public function getSlotCount(string $name): int
+    {
+        return count($this->slots[$name] ?? []);
     }
 }

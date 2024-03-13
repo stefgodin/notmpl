@@ -16,6 +16,7 @@ use StefGodin\NoTmpl\Engine\Node\NodeInterface;
 use StefGodin\NoTmpl\Engine\Node\ParentNodeInterface;
 use StefGodin\NoTmpl\Engine\Node\RawContentNode;
 use StefGodin\NoTmpl\Engine\Node\RootNode;
+use StefGodin\NoTmpl\Engine\Node\StateListenerInterface;
 
 class NodeTreeBuilder
 {
@@ -30,6 +31,11 @@ class NodeTreeBuilder
         $this->stopping = false;
         $this->rootNode = new RootNode();
         $this->currentNode = $this->rootNode;
+    }
+    
+    public function getCurrentNode(): NodeInterface
+    {
+        return $this->currentNode;
     }
     
     /**
@@ -141,6 +147,9 @@ class NodeTreeBuilder
         $node->setParent($this->currentNode);
         if($node instanceof ParentNodeInterface) {
             $this->currentNode = $node;
+            if($node instanceof StateListenerInterface) {
+                $node->onOpen();
+            }
         }
         
         if($wasOpened) {
@@ -172,6 +181,9 @@ class NodeTreeBuilder
                 $this->stopCapture();
             }
             
+            if($this->currentNode instanceof StateListenerInterface) {
+                $this->currentNode->onClose();
+            }
             $this->currentNode = $this->currentNode->getParent();
             
             if($wasOpened) {
