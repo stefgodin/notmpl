@@ -1,10 +1,7 @@
 <?php
 /** @noinspection PhpArrayAccessOnIllegalTypeInspection */
 
-use function StefGodin\NoTmpl\component;
-use function StefGodin\NoTmpl\component_end;
-use function StefGodin\NoTmpl\use_slot;
-use function StefGodin\NoTmpl\use_slot_end;
+use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end};
 
 $binds = 1;
 

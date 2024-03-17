@@ -531,11 +531,6 @@ We have seen that declaring `slot` requires a `slot_end` call, but it is not exa
 `use_slot` returns an object allowing for a direct `->end()` method removing the need to call a subsequent `*_end` 
 function.
 
-It is most useful in these scenarios:
- - `component([...])->end()`: Using a component without any of its slots
- - `slot([...])->end()`: Declaring a slot without any default content
- - `use_slot([...])->end()`: Hiding a slot content
-
 Let's change our default slot from `layout` since it has no default content.
 ```php
 ?>

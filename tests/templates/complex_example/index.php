@@ -1,14 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\{component,
-    component_end,
-    esc_html,
-    parent_slot,
-    slot,
-    slot_end,
-    use_repeat_slots,
-    use_slot,
-    use_slot_end};
+use function StefGodin\NoTmpl\{component, component_end, esc_html, parent_slot, slot, slot_end, use_slot, use_slot_end};
+use function StefGodin\NoTmpl\{use_repeat_slots};
 
 /**
  * @var string $title

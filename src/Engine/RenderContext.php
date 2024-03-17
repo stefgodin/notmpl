@@ -49,14 +49,12 @@ class RenderContext
         $this->nodeTreeBuilder = new NodeTreeBuilder();
         
         try {
-            $this->getNodeTree()
-                ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)));
-            
-            $rootNode = $this->getNodeTree()->buildTree();
-            
-            return $rootNode->render();
+            return $this->nodeTreeBuilder
+                ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
+                ->buildTree()
+                ->render();
         } catch(Throwable $e) {
-            $this->nodeTreeBuilder?->stopCapture(true);
+            $this->nodeTreeBuilder->stopCapture(true);
             throw $e;
         }
     }
@@ -153,7 +151,11 @@ class RenderContext
             ->startCapture();
     }
     
-    public function useRepeatSlots(string $name): Traversable&EnderInterface
+    /**
+     * @param string $name
+     * @return Traversable&EnderInterface
+     */
+    public function useRepeatSlots(string $name = ComponentNode::DEFAULT_SLOT): Traversable&EnderInterface
     {
         $node = $this->nodeTreeBuilder->getCurrentNode();
         /** @var UseComponentNode|null $useComponent */

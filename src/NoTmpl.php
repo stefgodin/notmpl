@@ -80,8 +80,6 @@ class NoTmpl
     /**
      * Sets a global value to be passed into render contexts
      *
-     * The 'name' is
-     *
      * @param string $name The `$name` of the variable
      * @param mixed $value The value set to the variable
      * @return $this

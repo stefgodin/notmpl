@@ -42,8 +42,8 @@ function component_end(): void
 
 /**
  * Starts the context of a slot within a component to allow replacement of the slot content on demand.
- * Reusing slot names within a component is allowed but may not work with parameters binding as only the last slot
- * bindings will be used
+ * Slot names can be reused, but needs to be used (via {@see use_slot}) the same number times to allow proper context
+ * bindings
  *
  * @param string $name The slot name
  * @param array $bindings Parameters to provide to the use-slots bindings
@@ -68,7 +68,7 @@ function slot_end(): void
 
 /**
  * Starts the context of a use-slot to overwrite the internal content of a slot within a component.
- * Use-slot names must be unique within a component.
+ * Use-slot names can be repeated but will only share the context of their index-equivalent slot.
  *
  * Usage of 'default' {@see slot} is optional as an implicit one is created for content put directly within
  * {@see component} nodes.
@@ -106,13 +106,20 @@ function use_slot_end(): void
 }
 
 /**
+ * Creates an iterator that will start the context of a use slot and close it on every iteration
+ * The number of time iterated is the number of unused slots of the given name defined in the component.
  *
+ * ```php
+ * <?php foreach(use_repeat_slots('my_slot') as $binds): ?>
+ *     // within the context of my_slot
+ * <?php endforeach ?>
+ * ```
  *
  * @param string $name
  * @return Traversable&EnderInterface
  * @noinspection PhpDocMissingThrowsInspection
  */
-function use_repeat_slots(string $name): Traversable&EnderInterface
+function use_repeat_slots(string $name = ComponentNode::DEFAULT_SLOT): Traversable&EnderInterface
 {
     return RenderContextStack::current()->useRepeatSlots($name);
 }

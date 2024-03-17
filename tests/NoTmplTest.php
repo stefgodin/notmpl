@@ -21,6 +21,7 @@ use function StefGodin\NoTmpl\component_end;
 use function StefGodin\NoTmpl\parent_slot;
 use function StefGodin\NoTmpl\slot;
 use function StefGodin\NoTmpl\slot_end;
+use function StefGodin\NoTmpl\use_repeat_slots;
 use function StefGodin\NoTmpl\use_slot;
 use function StefGodin\NoTmpl\use_slot_end;
 
@@ -65,6 +66,7 @@ class NoTmplTest extends TestCase
             'use_slot' => use_slot(...),
             'parent_slot' => parent_slot(...),
             'use_slot_end' => use_slot_end(...),
+            'use_repeat_slots' => use_repeat_slots(...),
         ];
         
         foreach($fns as $name => $fn) {
@@ -158,13 +160,49 @@ class NoTmplTest extends TestCase
     }
     
     /** @test */
-    public function product_test(): void
+    public function repeat_slots(): void
     {
         $noTmpl = (new NoTmpl())
-            ->setDirectories([__DIR__ . '/templates/product_test']);
+            ->setDirectories([__DIR__ . '/templates/repeat_slots']);
         
         self::assertSame(
-            self::tmpl(__DIR__ . '/templates/product_test/expected.html'),
+            self::tmpl(__DIR__ . '/templates/repeat_slots/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+    }
+    
+    /** @test */
+    public function empty_repeat_slots(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/empty_repeat_slots']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/empty_repeat_slots/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+    }
+    
+    /** @test */
+    public function root_slot(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/root_slot']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/root_slot/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+    }
+    
+    /** @test */
+    public function parent_slot(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/parent_slot']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/parent_slot/expected.html'),
             self::removeWhitespace($noTmpl->render('index.php')),
         );
     }
