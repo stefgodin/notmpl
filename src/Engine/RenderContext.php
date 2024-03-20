@@ -11,15 +11,13 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
+use Generator;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
-use StefGodin\NoTmpl\Engine\Node\NodeHelper;
-use StefGodin\NoTmpl\Engine\Node\NodeInterface;
 use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
 use StefGodin\NoTmpl\Engine\Node\SlotNode;
 use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
 use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use Throwable;
-use Traversable;
 
 class RenderContext
 {
@@ -49,12 +47,15 @@ class RenderContext
         $this->nodeTreeBuilder = new NodeTreeBuilder();
         
         try {
-            return $this->nodeTreeBuilder
+            $out = $this->nodeTreeBuilder
                 ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
                 ->buildTree()
                 ->render();
+            $this->nodeTreeBuilder = null;
+            return $out;
         } catch(Throwable $e) {
             $this->nodeTreeBuilder->stopCapture(true);
+            $this->nodeTreeBuilder = null;
             throw $e;
         }
     }
@@ -153,25 +154,39 @@ class RenderContext
     
     /**
      * @param string $name
-     * @return Traversable&EnderInterface
+     * @return Generator
+     * @throws EngineException
      */
-    public function useRepeatSlots(string $name = ComponentNode::DEFAULT_SLOT): Traversable&EnderInterface
+    public function useRepeatSlots(string $name = ComponentNode::DEFAULT_SLOT): Generator
     {
-        $node = $this->nodeTreeBuilder->getCurrentNode();
-        /** @var UseComponentNode|null $useComponent */
-        $useComponent = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseComponentNode);
-        $startIndex = ($useComponent?->getLastUseSlotIndex($name) ?? -2) + 1;
-        $endIndex = ($useComponent?->getComponent()->getSlotCount($name) ?? 0) - 1;
+        $useComponent = $this->getNodeTree()->getCurrentNode();
+        if(!$useComponent instanceof UseComponentNode) {
+            return;
+        }
         
-        return new NodeBuilderIterator(
-            function() use ($name) {
-                $this->useSlot($name, $bindings);
-                return $bindings;
-            },
-            fn() => $this->useSlotEnd(),
-            $startIndex,
-            $endIndex
-        );
+        $slotCount = $useComponent->getComponent()->getSlotCount($name) ?? 0;
+        $useCount = $useComponent->getLastUseSlotIndex($name) + 1;
+        while($useCount < $slotCount) {
+            $this->useSlot($name, $bindings);
+            yield $useCount => $bindings;
+            $this->useSlotEnd();
+            $useCount++;
+        }
+    }
+    
+    /**
+     * @param string $name
+     * @return bool
+     * @throws EngineException
+     */
+    function hasSlot(string $name = ComponentNode::DEFAULT_SLOT): bool
+    {
+        $useComponent = $this->getNodeTree()->getCurrentNode();
+        if(!$useComponent instanceof UseComponentNode) {
+            return false;
+        }
+        
+        return $useComponent->getComponent()->getSlotCount($name) > ($useComponent->getLastUseSlotIndex($name) + 1);
     }
     
     /**
@@ -181,7 +196,7 @@ class RenderContext
     private function getNodeTree(): NodeTreeBuilder
     {
         if($this->nodeTreeBuilder === null) {
-            throw new EngineException("Rendering context is closed", EngineException::NO_CONTEXT);
+            EngineException::throwNoContext("Rendering context is closed");
         }
         
         return $this->nodeTreeBuilder;

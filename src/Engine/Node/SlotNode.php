@@ -34,11 +34,6 @@ class SlotNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface
         $this->parent = $node;
     }
     
-    public function getComponent(): ?ComponentNode
-    {
-        return $this->component;
-    }
-    
     public function render(): string
     {
         return $this->component?->getUseSlot($this)?->render() ?? $this->renderAsIs();

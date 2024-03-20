@@ -23,10 +23,7 @@ class RenderContextStack
     public static function current(): RenderContext
     {
         if(empty(self::$stack)) {
-            throw new EngineException(
-                "There is no current rendering context started. Are you trying to use NoTMPL functions without using 'render' first?",
-                EngineException::NO_CONTEXT
-            );
+            EngineException::throwNoContext("There is no current rendering context started. Are you trying to use NoTMPL functions without using 'render' first?");
         }
         
         return self::$stack[array_key_last(self::$stack)];

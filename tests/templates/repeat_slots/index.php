@@ -20,7 +20,7 @@ use function StefGodin\NoTmpl\{component, component_end, parent_slot, use_repeat
     <?php foreach($it = use_repeat_slots('product:name') as $i => $binds): ?>
         <?php parent_slot() ?>(<?= $binds['id'] ?>)
         <?php if($binds['id'] === 3): ?>
-            <?php $it->end() ?>
+            <?php use_slot_end() ?>
             <?php break ?>
         <?php endif ?>
     <?php endforeach ?>

@@ -48,7 +48,7 @@ $links = [
             <?php foreach($it = use_repeat_slots('name') as $k => $bindings): ?>
                 <span><?php parent_slot() ?>(<?= $bindings['product']['id'] ?>) : <?= $k ?></span>
                 <?php if($k === 2){ ?>
-                    <?php $it->end(); break; ?>
+                    <?php use_slot_end(); break; ?>
                 <?php } ?>
             <?php endforeach ?>
         <?php component_end() ?>

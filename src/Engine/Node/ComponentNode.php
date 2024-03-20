@@ -31,13 +31,7 @@ class ComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInte
     
     public function addSlot(SlotNode $node): void
     {
-        if($node->getComponent() === $this) {
-            $name = $node->getName();
-            if(empty($this->slots[$name])) {
-                $this->slots[$name] = [];
-            }
-            $this->slots[$name][] = $node;
-        }
+        $this->slots[$node->getName()][] = $node;
     }
     
     public function getSlot(string $name, int $index): SlotNode|null

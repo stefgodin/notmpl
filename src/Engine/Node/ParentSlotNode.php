@@ -34,9 +34,7 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
         
         if(!$useComponent instanceof UseComponentNode) {
             $useComponentType = UseComponentNode::getType();
-            throw new EngineException(
-                "{$this->getType()} node cannot be created outside of a {$useComponentType} node"
-            );
+            EngineException::throwInvalidTreeStructure("{$this->getType()} node cannot be created outside of a {$useComponentType} node");
         }
         
         $useSlot = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseSlotNode);

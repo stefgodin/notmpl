@@ -11,10 +11,10 @@
 
 namespace StefGodin\NoTmpl;
 
+use Generator;
 use StefGodin\NoTmpl\Engine\EnderInterface;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
-use Traversable;
 
 /**
  * Starts a component block and loads a specific file for it.
@@ -106,7 +106,7 @@ function use_slot_end(): void
 }
 
 /**
- * Creates an iterator that will start the context of a use slot and close it on every iteration
+ * Creates a generator that will start the context of a use slot and close it on every iteration
  * The number of time iterated is the number of unused slots of the given name defined in the component.
  *
  * ```php
@@ -116,10 +116,22 @@ function use_slot_end(): void
  * ```
  *
  * @param string $name
- * @return Traversable&EnderInterface
+ * @return Generator
  * @noinspection PhpDocMissingThrowsInspection
  */
-function use_repeat_slots(string $name = ComponentNode::DEFAULT_SLOT): Traversable&EnderInterface
+function use_repeat_slots(string $name = ComponentNode::DEFAULT_SLOT): Generator
 {
     return RenderContextStack::current()->useRepeatSlots($name);
+}
+
+/**
+ * Checks if there are slots of the given name that were not yet used.
+ *
+ * @param string $name
+ * @return bool
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function has_slot(string $name = ComponentNode::DEFAULT_SLOT): bool
+{
+    return RenderContextStack::current()->hasSlot($name);
 }

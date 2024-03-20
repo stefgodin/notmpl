@@ -27,11 +27,6 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
         $this->useSlots = [];
     }
     
-    /**
-     * @param ParentNodeInterface $node
-     * @return void
-     * @throws \StefGodin\NoTmpl\Engine\EngineException
-     */
     public function setParent(ParentNodeInterface $node): void
     {
         $this->parent = $node;
@@ -47,23 +42,16 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
     public function addChild(ChildNodeInterface $node): void
     {
         if($node instanceof UseSlotNode) {
-            $name = $node->getSlotName();
-            if(empty($this->useSlots)) {
-                $this->useSlots = [];
-            }
-            
-            $this->useSlots[$name][] = $node;
+            $this->useSlots[$node->getSlotName()][] = $node;
         } else {
+            $node->setParent($this->defaultUseSlot);
             $this->defaultUseSlot->addChild($node);
         }
     }
     
     public function getChildren(): array
     {
-        return array_values(array_merge(
-            [ComponentNode::DEFAULT_SLOT => $this->defaultUseSlot],
-            $this->useSlots,
-        ));
+        return [];
     }
     
     public function getUseSlot(string $name, int $index): UseSlotNode|null
@@ -81,7 +69,7 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
             return 0;
         }
         
-        return array_key_last($this->useSlots[$name] ?? []) ?? -1;
+        return empty($this->useSlots[$name]) ? -1 : array_key_last($this->useSlots[$name]);
     }
     
     public function getUseSlotIndex(UseSlotNode $node): int

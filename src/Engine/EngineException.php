@@ -23,4 +23,19 @@ class EngineException extends Exception
     const INVALID_TREE_STRUCTURE = 301;
     const FILE_NOT_FOUND = 401;
     const NO_FILE_HANDLER = 402;
+    
+    public static function throwNoContext(string $message): never
+    {
+        throw new EngineException($message, self::NO_CONTEXT);
+    }
+    
+    public static function throwIllegalOb(string $message): never
+    {
+        throw new EngineException($message, self::ILLEGAL_BUFFER_ACTION);
+    }
+    
+    public static function throwInvalidTreeStructure(string $message): never
+    {
+        throw new EngineException($message, self::INVALID_TREE_STRUCTURE);
+    }
 }

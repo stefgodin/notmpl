@@ -45,10 +45,7 @@ class NodeTreeBuilder
     public function buildTree(): RootNode
     {
         if($this->currentNode !== $this->rootNode) {
-            throw new EngineException(
-                "{$this->currentNode->getType()} node was left open",
-                EngineException::INVALID_TREE_STRUCTURE
-            );
+            EngineException::throwInvalidTreeStructure("{$this->currentNode->getType()} node was left open");
         }
         
         return $this->rootNode;
@@ -63,10 +60,7 @@ class NodeTreeBuilder
         if($this->level === null) {
             ob_start(function(string $buffer) {
                 if(!$this->stopping) {
-                    throw new EngineException(
-                        "Attempting to close output buffer outside of content manager",
-                        EngineException::ILLEGAL_BUFFER_ACTION
-                    );
+                    EngineException::throwIllegalOb("Attempted to close output buffer outside of the node tree context");
                 }
                 
                 if(!empty($buffer)) {
@@ -91,19 +85,16 @@ class NodeTreeBuilder
         if($this->level !== null) {
             $this->stopping = true;
             if(!$force && $this->level < ob_get_level()) {
-                throw new EngineException(
-                    "An output buffer was left open outside of content manager",
-                    EngineException::ILLEGAL_BUFFER_ACTION
-                );
+                EngineException::throwIllegalOb("An output buffer was left open outside of content manager");
             }
             
-            if(ob_end_clean() === false && ob_end_flush() === false) {
-                throw new EngineException(
-                    "Failed to stop content manager capture",
-                    EngineException::ILLEGAL_BUFFER_ACTION
-                );
+            while($this->level <= ob_get_level()) {
+                if(ob_end_clean() === false && ob_end_flush() === false) {
+                    break; // Can't close ob for some reason
+                }
             }
-            $this->stopping = true;
+            
+            $this->stopping = false;
             $this->level = null;
         }
         
@@ -169,10 +160,7 @@ class NodeTreeBuilder
         if((is_string($expect) && $this->currentNode::getType() !== $expect)
             || ($expect instanceof NodeInterface && $this->currentNode !== $expect)) {
             $type = is_string($expect) ? $expect : $expect::getType();
-            throw new EngineException(
-                "Cannot end {$type} node, {$this->currentNode->getType()} node was left open",
-                EngineException::INVALID_TREE_STRUCTURE
-            );
+            EngineException::throwInvalidTreeStructure("Cannot end {$type} node, {$this->currentNode->getType()} node was left open");
         }
         
         if($this->currentNode instanceof ChildNodeInterface) {

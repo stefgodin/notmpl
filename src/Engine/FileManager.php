@@ -45,10 +45,7 @@ class FileManager
             }
         }
         
-        throw new EngineException(
-            sprintf("Could not resolve file '%s'. Checked for %s", $name, implode(', ', $checkedPaths)),
-            EngineException::FILE_NOT_FOUND
-        );
+        throw new EngineException(sprintf("Could not resolve file '%s'. Checked for %s", $name, implode(', ', $checkedPaths)), EngineException::FILE_NOT_FOUND);
     }
     
     /**
@@ -62,7 +59,7 @@ class FileManager
         $file = $this->resolve($name);
         
         foreach($this->handlers as $regex => $handler) {
-            if(preg_match($regex, $file) !== false) {
+            if(preg_match($regex, $file)) {
                 $handler($file, $params);
                 return;
             }

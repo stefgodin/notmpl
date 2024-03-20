@@ -41,10 +41,7 @@ class UseSlotNode implements NodeInterface, ParentNodeInterface, ChildNodeInterf
     {
         if(!$node instanceof UseComponentNode) {
             $useComponentType = UseComponentNode::getType();
-            throw new EngineException(
-                "{$this->getType()} node can only be added to a {$useComponentType} node under use",
-                EngineException::INVALID_TREE_STRUCTURE
-            );
+            EngineException::throwInvalidTreeStructure("{$this->getType()} node can only be added to a {$useComponentType} node under use");
         }
         
         $this->parent = $node;

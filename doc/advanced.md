@@ -64,10 +64,50 @@ $binds = 1;
 
 It allows you to reuse the same variable for many `use_slot`
 
+## Dynamic slots
+
+Sometimes we want a component to have some logic that will dynamically define its slots.
+
+```php
+// my_component.php
+<?php if($check /* false */): ?>
+    <?php slot('my_slot', ['id' => 'Some content']) ?>
+        <div>Some content</div> 
+    <?php slot_end() ?>
+<?php endif ?>
+```
+
+This may cause issues on the user side as using `use_slot` does not prevent the code under it from being executed.
+
+```php
+// index.php
+<?php component('my_component') ?>
+    <?php use_slot('my_slot', $binds) ?>
+        <div>Overwritting <?= $binds['id'] ?></div> <!-- Undefined index 'id' ... -->
+    <?php use_slot_end() ?>
+<?php component_end() ?>
+```
+
+To prevent this issue, the `has_slot` function can be used to check if a slot of a given name was not yet used for a
+component.
+
+
+```php
+// index.php
+<?php component('my_component') ?>
+    <?php if(has_slot('my_slot')): ?>
+        <!-- skipped -->
+        <?php use_slot('my_slot', $binds) ?>
+            <div>Overwritting <?= $binds['id'] ?></div>
+        <?php use_slot_end() ?>
+    <?php endif ?>
+<?php component_end() ?>
+```
+
 ## Slots within a loop
 
 Let's start with the basics. Multiple `slot` can have the same name. They will require the same number of `use_slot` to 
-overwrite them.
+overwrite each of them.
 
 ```php
 // my_component.php
@@ -194,7 +234,9 @@ This is when `use_repeat_slots` finds its use.
 2. Starts and ends a `use_slot` on each iteration, so you don't have to
 3. Gives access to the slot `bindings` from the iterated value
 
-> Note: The slot iterated on does not need to be repeated within the component. In fact, it does not even need to exist.
+> Note: The slot iterated on does not need to be repeated within the component for `use_repeat_slots` to work. In fact, 
+> it does not even need to exist.
 
-> Note 2: Breaking out of the foreach early using `break` will leave an open `use_slot`. There are very few reason to do
-> this, but you should use the iterator `end()` method before the `break` to prevent this issue.
+> Note 2: Breaking out of the foreach early using `break` will leave an open `use_slot`. There are very few reasons to 
+> do so. Most of the time, using `parent_slot` does the wanted job. In other cases, you should use the `use_slot_end`
+> function before the `break` to prevent this issue.
