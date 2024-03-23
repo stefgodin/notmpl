@@ -19,6 +19,7 @@ use StefGodin\NoTmpl\NoTmpl;
 use function PHPUnit\Framework\assertSame;
 use function StefGodin\NoTmpl\component;
 use function StefGodin\NoTmpl\component_end;
+use function StefGodin\NoTmpl\has_slot;
 use function StefGodin\NoTmpl\parent_slot;
 use function StefGodin\NoTmpl\slot;
 use function StefGodin\NoTmpl\slot_end;
@@ -154,6 +155,7 @@ class NoTmplTest extends TestCase
             'parent_slot' => parent_slot(...),
             'use_slot_end' => use_slot_end(...),
             'use_repeat_slots' => use_repeat_slots(...),
+            'has_slot' => has_slot(...),
         ];
         
         foreach($fns as $name => $fn) {
@@ -271,6 +273,18 @@ class NoTmplTest extends TestCase
     }
     
     /** @test */
+    public function repeat_slots_outside(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/repeat_slots_outside']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/repeat_slots_outside/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+    }
+    
+    /** @test */
     public function root_slot(): void
     {
         $noTmpl = (new NoTmpl())
@@ -341,6 +355,18 @@ class NoTmplTest extends TestCase
     }
     
     /** @test */
+    public function has_slot_outside(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/has_slot_outside']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/has_slot_outside/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+    }
+    
+    /** @test */
     public function had_slot(): void
     {
         $noTmpl = (new NoTmpl())
@@ -372,6 +398,18 @@ class NoTmplTest extends TestCase
         (new NoTmpl())
             ->addDirectory(__DIR__ . '/templates/ob_early_close')
             ->render('index.php');
+    }
+    
+    /** @test */
+    public function empty_default_slot(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/empty_default_slot']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/empty_default_slot/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
     }
     
     private static function tmpl(string $file): string

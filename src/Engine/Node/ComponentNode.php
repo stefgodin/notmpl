@@ -34,26 +34,24 @@ class ComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInte
         $this->slots[$node->getName()][] = $node;
     }
     
-    public function getSlot(string $name, int $index): SlotNode|null
-    {
-        return $this->slots[$name][$index] ?? null;
-    }
-    
     public function setUseComponent(UseComponentNode $node): void
     {
-        if($node->getComponent() === $this) {
-            $this->useComponent = $node;
+        $this->useComponent = $node;
+    }
+    
+    public function addUseSlot(UseSlotNode $useSlot): void
+    {
+        foreach($this->slots[$useSlot->getSlotName()] ?? [] as $slot) {
+            if(!$slot->isReplaced()) {
+                $slot->setReplacementNode($useSlot);
+                $useSlot->setSlot($slot);
+                break;
+            }
         }
     }
     
-    public function getUseSlot(SlotNode $slot): UseSlotNode|null
+    public function getSlots(string $name): array
     {
-        $index = array_search($slot, $this->slots[$slot->getName()], true);
-        return $index !== false ? $this->useComponent?->getUseSlot($slot->getName(), $index) : null;
-    }
-    
-    public function getSlotCount(string $name): int
-    {
-        return count($this->slots[$name] ?? []);
+        return $this->slots[$name] ?? [];
     }
 }

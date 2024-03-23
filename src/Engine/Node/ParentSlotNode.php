@@ -18,7 +18,7 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
     use TypeTrait;
     use ChildNodeTrait;
     
-    private SlotNode|null $parentSlot;
+    private UseSlotNode|null $useSlot;
     
     /**
      * @param ParentNodeInterface $node
@@ -29,25 +29,18 @@ class ParentSlotNode implements NodeInterface, ChildNodeInterface
     {
         $this->parent = $node;
         
-        $useComponent = NodeHelper::climbUntil($node,
-            fn(NodeInterface $n) => $n instanceof ComponentNode || $n instanceof UseComponentNode);
+        $refNode = NodeHelper::climbToFirst($node, UseSlotNode::class, UseComponentNode::class, ComponentNode::class);
         
-        if(!$useComponent instanceof UseComponentNode) {
+        if($refNode instanceof ComponentNode) {
             $useComponentType = UseComponentNode::getType();
-            EngineException::throwInvalidTreeStructure("{$this->getType()} node cannot be created outside of a {$useComponentType} node");
+            EngineException::throwInvalidTreeStructure("{$this::getType()} node must be created within a {$useComponentType} node context");
         }
         
-        $useSlot = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof UseSlotNode);
-        $slotName = $useSlot instanceof UseSlotNode ? $useSlot->getSlotName() : ComponentNode::DEFAULT_SLOT;
-        
-        $this->parentSlot = $useComponent->getComponent()->getSlot(
-            $slotName,
-            $useComponent->getLastUseSlotIndex($slotName),
-        );
+        $this->useSlot = $refNode instanceof UseComponentNode ? $refNode->getImplicitUseSlot() : $refNode;
     }
     
     public function render(): string
     {
-        return $this->parentSlot?->renderAsIs() ?? '';
+        return $this->useSlot->getSlot()?->renderAsIs() ?? '';
     }
 }

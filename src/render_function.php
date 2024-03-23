@@ -12,8 +12,8 @@
 namespace StefGodin\NoTmpl;
 
 use Generator;
-use StefGodin\NoTmpl\Engine\EnderInterface;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
+use StefGodin\NoTmpl\Engine\NodeEnder;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
 
 /**
@@ -21,10 +21,10 @@ use StefGodin\NoTmpl\Engine\RenderContextStack;
  *
  * @param string $name The component to render
  * @param array $parameters Specified additional parameters
- * @return EnderInterface
+ * @return NodeEnder
  * @noinspection PhpDocMissingThrowsInspection
  */
-function component(string $name, array $parameters = []): EnderInterface
+function component(string $name, array $parameters = []): NodeEnder
 {
     return RenderContextStack::current()->component($name, $parameters);
 }
@@ -47,10 +47,10 @@ function component_end(): void
  *
  * @param string $name The slot name
  * @param array $bindings Parameters to provide to the use-slots bindings
- * @return EnderInterface
+ * @return NodeEnder
  * @noinspection PhpDocMissingThrowsInspection
  */
-function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): EnderInterface
+function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
 {
     return RenderContextStack::current()->slot($name, $bindings);
 }
@@ -75,10 +75,10 @@ function slot_end(): void
  *
  * @param string $name The used slot name
  * @param mixed|array &$bindings The slot bindings to access some exposed values
- * @return EnderInterface
+ * @return NodeEnder
  * @noinspection PhpDocMissingThrowsInspection
  */
-function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): EnderInterface
+function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
 {
     return RenderContextStack::current()->useSlot($name, $bindings);
 }

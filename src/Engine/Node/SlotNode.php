@@ -19,24 +19,35 @@ class SlotNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface
     }
     use TypeTrait;
     
-    private ComponentNode|null $component;
+    private NodeInterface|null $replacementNode;
     
     public function __construct(
-        private readonly string $name = ComponentNode::DEFAULT_SLOT,
+        private readonly string $name,
         private readonly array  $bindings = [],
-    ) {}
+    )
+    {
+        $this->replacementNode = null;
+    }
     
     public function setParent(ParentNodeInterface $node): void
     {
-        $this->component = NodeHelper::climbUntil($node, fn(NodeInterface $n) => $n instanceof ComponentNode);
-        $this->component?->addSlot($this);
-        
+        NodeHelper::climbToFirst($node, ComponentNode::class)?->addSlot($this);
         $this->parent = $node;
+    }
+    
+    public function setReplacementNode(NodeInterface $replacementNode): void
+    {
+        $this->replacementNode = $replacementNode;
+    }
+    
+    public function isReplaced(): bool
+    {
+        return $this->replacementNode !== null;
     }
     
     public function render(): string
     {
-        return $this->component?->getUseSlot($this)?->render() ?? $this->renderAsIs();
+        return $this->replacementNode?->render() ?? $this->renderAsIs();
     }
     
     public function getName(): string

@@ -13,9 +13,19 @@ namespace StefGodin\NoTmpl\Engine\Node;
 
 class NodeHelper
 {
-    public static function climbUntil(NodeInterface $node, callable $climb): NodeInterface|null
+    /**
+     * @template T
+     * @param NodeInterface $node
+     * @param class-string<T> ...$inTypes
+     * @return T|null
+     */
+    public static function climbToFirst(NodeInterface $node, string ...$inTypes): NodeInterface|null
     {
-        while($node && !$climb($node)) {
+        if(empty($inTypes)) {
+            return null;
+        }
+        
+        while($node && empty(array_filter($inTypes, fn(string $type) => $node instanceof $type))) {
             $node = $node instanceof ChildNodeInterface ? $node->getParent() : null;
         }
         

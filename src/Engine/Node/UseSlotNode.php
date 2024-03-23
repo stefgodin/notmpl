@@ -22,13 +22,15 @@ class UseSlotNode implements NodeInterface, ParentNodeInterface, ChildNodeInterf
     use ParentNodeTrait;
     use TypeTrait;
     
+    private SlotNode|null $slot;
     private mixed $oldBindings;
     
     public function __construct(
-        private readonly string $slotName = ComponentNode::DEFAULT_SLOT,
+        private readonly string $slotName,
         private mixed           &$bindingsRef = null,
     )
     {
+        $this->slot = null;
         $this->oldBindings = null;
     }
     
@@ -41,10 +43,20 @@ class UseSlotNode implements NodeInterface, ParentNodeInterface, ChildNodeInterf
     {
         if(!$node instanceof UseComponentNode) {
             $useComponentType = UseComponentNode::getType();
-            EngineException::throwInvalidTreeStructure("{$this->getType()} node can only be added to a {$useComponentType} node under use");
+            EngineException::throwInvalidTreeStructure("{$this::getType()} node can only be added to a {$useComponentType} node under use");
         }
         
         $this->parent = $node;
+    }
+    
+    public function setSlot(SlotNode $slot): void
+    {
+        $this->slot = $slot;
+    }
+    
+    public function getSlot(): SlotNode|null
+    {
+        return $this->slot;
     }
     
     public function getSlotName(): string
@@ -54,13 +66,8 @@ class UseSlotNode implements NodeInterface, ParentNodeInterface, ChildNodeInterf
     
     public function onOpen(): void
     {
-        $slotBindings = $this->parent->getComponent()->getSlot(
-            $this->slotName,
-            $this->parent->getUseSlotIndex($this),
-        )?->getBindings() ?? null;
-        
         $this->oldBindings = $this->bindingsRef;
-        $this->bindingsRef = $slotBindings;
+        $this->bindingsRef = $this->slot?->getBindings() ?? null;
     }
     
     public function onClose(): void

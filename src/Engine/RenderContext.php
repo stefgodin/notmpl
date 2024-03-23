@@ -17,58 +17,38 @@ use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
 use StefGodin\NoTmpl\Engine\Node\SlotNode;
 use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
 use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
-use Throwable;
 
 class RenderContext
 {
-    private NodeTreeBuilder|null $nodeTreeBuilder;
+    private NodeTreeBuilder $nodeTreeBuilder;
     
     public function __construct(
         private readonly FileManager $fileManager,
         private readonly array       $globalParams,
     )
     {
-        $this->nodeTreeBuilder = null;
-    }
-    
-    /**
-     * @param string $name
-     * @param array $params
-     * @return string
-     * @throws EngineException
-     * @throws Throwable
-     */
-    public function render(string $name, array $params = []): string
-    {
-        if($this->nodeTreeBuilder !== null) {
-            throw new EngineException("Cannot reuse same rendering context");
-        }
-        
         $this->nodeTreeBuilder = new NodeTreeBuilder();
-        
-        try {
-            $out = $this->nodeTreeBuilder
-                ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
-                ->buildTree()
-                ->render();
-            $this->nodeTreeBuilder = null;
-            return $out;
-        } catch(Throwable $e) {
-            $this->nodeTreeBuilder->stopCapture(true);
-            $this->nodeTreeBuilder = null;
-            throw $e;
-        }
+    }
+    
+    public function render(): string
+    {
+        return $this->nodeTreeBuilder->stopCapture()->buildTree()->render();
+    }
+    
+    public function cleanup(): void
+    {
+        $this->nodeTreeBuilder->stopCapture(true);
     }
     
     /**
      * @param string $name
      * @param array $params
-     * @return EnderInterface
+     * @return NodeEnder
      * @throws EngineException
      */
-    public function component(string $name, array $params): EnderInterface
+    public function component(string $name, array $params): NodeEnder
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->addNode($component = new ComponentNode())
             ->capture(fn() => $this->fileManager->handle($name, array_merge($this->globalParams, $params)))
             ->exitNode($component)
@@ -84,7 +64,7 @@ class RenderContext
      */
     public function componentEnd(): void
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->exitNode(UseComponentNode::getType())
             ->startCapture();
     }
@@ -92,12 +72,12 @@ class RenderContext
     /**
      * @param string $name
      * @param array $bindings
-     * @return EnderInterface
+     * @return NodeEnder
      * @throws EngineException
      */
-    public function slot(string $name, array $bindings = []): EnderInterface
+    public function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->addNode(new SlotNode($name, $bindings))
             ->startCapture();
         
@@ -110,7 +90,7 @@ class RenderContext
      */
     public function slotEnd(): void
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->exitNode(SlotNode::getType())
             ->startCapture();
     }
@@ -118,12 +98,12 @@ class RenderContext
     /**
      * @param string $name
      * @param mixed|array &$bindings
-     * @return EnderInterface
+     * @return NodeEnder
      * @throws EngineException
      */
-    public function useSlot(string $name, mixed &$bindings = null): EnderInterface
+    public function useSlot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->addNode(new UseSlotNode($name, $bindings))
             ->startCapture();
         
@@ -136,7 +116,7 @@ class RenderContext
      */
     public function parentSlot(): void
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->addNode(new ParentSlotNode())
             ->startCapture();
     }
@@ -147,7 +127,7 @@ class RenderContext
      */
     public function useSlotEnd(): void
     {
-        $this->getNodeTree()
+        $this->nodeTreeBuilder
             ->exitNode(UseSlotNode::getType())
             ->startCapture();
     }
@@ -159,18 +139,17 @@ class RenderContext
      */
     public function useRepeatSlots(string $name = ComponentNode::DEFAULT_SLOT): Generator
     {
-        $useComponent = $this->getNodeTree()->getCurrentNode();
+        $useComponent = $this->nodeTreeBuilder->getCurrentNode();
         if(!$useComponent instanceof UseComponentNode) {
             return;
         }
         
-        $slotCount = $useComponent->getComponent()->getSlotCount($name) ?? 0;
-        $useCount = $useComponent->getLastUseSlotIndex($name) + 1;
-        while($useCount < $slotCount) {
-            $this->useSlot($name, $bindings);
-            yield $useCount => $bindings;
-            $this->useSlotEnd();
-            $useCount++;
+        foreach($useComponent->getComponent()->getSlots($name) as $i => $slot) {
+            if(!$slot->isReplaced()) {
+                $this->useSlot($name, $bindings);
+                yield $i => $bindings;
+                $this->useSlotEnd();
+            }
         }
     }
     
@@ -181,24 +160,11 @@ class RenderContext
      */
     function hasSlot(string $name = ComponentNode::DEFAULT_SLOT): bool
     {
-        $useComponent = $this->getNodeTree()->getCurrentNode();
+        $useComponent = $this->nodeTreeBuilder->getCurrentNode();
         if(!$useComponent instanceof UseComponentNode) {
             return false;
         }
         
-        return $useComponent->getComponent()->getSlotCount($name) > ($useComponent->getLastUseSlotIndex($name) + 1);
-    }
-    
-    /**
-     * @return NodeTreeBuilder
-     * @throws EngineException
-     */
-    private function getNodeTree(): NodeTreeBuilder
-    {
-        if($this->nodeTreeBuilder === null) {
-            EngineException::throwNoContext("Rendering context is closed");
-        }
-        
-        return $this->nodeTreeBuilder;
+        return !empty(array_filter($useComponent->getComponent()->getSlots($name), fn(SlotNode $s) => !$s->isReplaced()));
     }
 }

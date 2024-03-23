@@ -11,27 +11,22 @@
 
 namespace StefGodin\NoTmpl\Engine\Node;
 
-class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface
+class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeInterface, StateListenerInterface
 {
     use ChildNodeTrait;
     use TypeTrait;
     
-    private UseSlotNode $defaultUseSlot;
-    private array $useSlots;
+    private UseSlotNode $implicitUseSlot;
+    private bool $implicitEmpty;
     
     public function __construct(
         private readonly ComponentNode $component,
     )
     {
         $component->setUseComponent($this);
-        $this->useSlots = [];
-    }
-    
-    public function setParent(ParentNodeInterface $node): void
-    {
-        $this->parent = $node;
-        $this->defaultUseSlot = new UseSlotNode();
-        $this->defaultUseSlot->setParent($this);
+        $this->implicitUseSlot = new UseSlotNode(ComponentNode::DEFAULT_SLOT);
+        $this->implicitUseSlot->setParent($this);
+        $this->implicitEmpty = true;
     }
     
     public function getComponent(): ComponentNode
@@ -42,11 +37,16 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
     public function addChild(ChildNodeInterface $node): void
     {
         if($node instanceof UseSlotNode) {
-            $this->useSlots[$node->getSlotName()][] = $node;
+            $this->component->addUseSlot($node);
         } else {
-            $node->setParent($this->defaultUseSlot);
-            $this->defaultUseSlot->addChild($node);
+            $this->implicitEmpty = $this->implicitEmpty && $node instanceof RawContentNode && trim($node->render()) === '';
+            $this->implicitUseSlot->addChild($node);
         }
+    }
+    
+    public function getImplicitUseSlot(): UseSlotNode|null
+    {
+        return !$this->implicitEmpty ? $this->implicitUseSlot : null;
     }
     
     public function getChildren(): array
@@ -54,32 +54,18 @@ class UseComponentNode implements NodeInterface, ChildNodeInterface, ParentNodeI
         return [];
     }
     
-    public function getUseSlot(string $name, int $index): UseSlotNode|null
-    {
-        if($index === 0 && empty($this->useSlots[$name]) && $name === ComponentNode::DEFAULT_SLOT) {
-            return $this->defaultUseSlot;
-        }
-        
-        return $this->useSlots[$name][$index] ?? null;
-    }
+    public function onOpen(): void {}
     
-    public function getLastUseSlotIndex(string $name): int
+    public function onClose(): void
     {
-        if(empty($this->useSlots[$name]) && $name === ComponentNode::DEFAULT_SLOT) {
-            return 0;
+        if($this->implicitEmpty) {
+            return;
         }
         
-        return empty($this->useSlots[$name]) ? -1 : array_key_last($this->useSlots[$name]);
-    }
-    
-    public function getUseSlotIndex(UseSlotNode $node): int
-    {
-        if($node === $this->defaultUseSlot) {
-            return empty($this->useSlots[ComponentNode::DEFAULT_SLOT]) ? 0 : -1;
+        $slots = $this->component->getSlots($this->implicitUseSlot->getSlotName());
+        if(empty(array_filter($slots, fn(SlotNode $s) => $s->isReplaced()))) {
+            $this->component->addUseSlot($this->implicitUseSlot);
         }
-        
-        $index = array_search($node, $this->useSlots[$node->getSlotName()] ?? []);
-        return $index !== false ? $index : -1;
     }
     
     public function render(): string

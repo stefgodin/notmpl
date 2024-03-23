@@ -66,8 +66,10 @@ class NoTmpl
         );
         RenderContextStack::$stack[] = $renderContext;
         try {
-            $result = $renderContext->render($file, $parameters);
+            $renderContext->component($file, $parameters)->end();
+            $result = $renderContext->render();
         } catch(Throwable $e) {
+            $renderContext->cleanup();
             array_pop(RenderContextStack::$stack);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;

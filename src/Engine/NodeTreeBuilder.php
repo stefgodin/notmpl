@@ -29,8 +29,7 @@ class NodeTreeBuilder
     {
         $this->level = null;
         $this->stopping = false;
-        $this->rootNode = new RootNode();
-        $this->currentNode = $this->rootNode;
+        $this->currentNode = $this->rootNode = new RootNode();
     }
     
     public function getCurrentNode(): NodeInterface
@@ -45,7 +44,7 @@ class NodeTreeBuilder
     public function buildTree(): RootNode
     {
         if($this->currentNode !== $this->rootNode) {
-            EngineException::throwInvalidTreeStructure("{$this->currentNode->getType()} node was left open");
+            EngineException::throwInvalidTreeStructure("{$this->currentNode::getType()} node was left open");
         }
         
         return $this->rootNode;
@@ -90,7 +89,7 @@ class NodeTreeBuilder
             
             while($this->level <= ob_get_level()) {
                 if(ob_end_clean() === false && ob_end_flush() === false) {
-                    break; // Can't close ob for some reason
+                    break; // Can't close ob for some reason, infinite loop
                 }
             }
             
@@ -108,7 +107,7 @@ class NodeTreeBuilder
      */
     public function capture(callable $call): static
     {
-        $wasClosed = !$this->isOpen();
+        $wasClosed = !$this->isCapturing();
         if($wasClosed) {
             $this->startCapture();
         }
@@ -129,7 +128,7 @@ class NodeTreeBuilder
      */
     public function addNode(ChildNodeInterface $node): static
     {
-        $wasOpened = $this->isOpen();
+        $wasOpened = $this->isCapturing();
         if($wasOpened) {
             $this->stopCapture();
         }
@@ -160,11 +159,11 @@ class NodeTreeBuilder
         if((is_string($expect) && $this->currentNode::getType() !== $expect)
             || ($expect instanceof NodeInterface && $this->currentNode !== $expect)) {
             $type = is_string($expect) ? $expect : $expect::getType();
-            EngineException::throwInvalidTreeStructure("Cannot end {$type} node, {$this->currentNode->getType()} node was left open");
+            EngineException::throwInvalidTreeStructure("Cannot end {$type} node, {$this->currentNode::getType()} node was left open");
         }
         
         if($this->currentNode instanceof ChildNodeInterface) {
-            $wasOpened = $this->isOpen();
+            $wasOpened = $this->isCapturing();
             if($wasOpened) {
                 $this->stopCapture();
             }
@@ -182,7 +181,7 @@ class NodeTreeBuilder
         return $this;
     }
     
-    private function isOpen(): bool
+    private function isCapturing(): bool
     {
         return $this->level !== null && ob_get_level() >= $this->level;
     }

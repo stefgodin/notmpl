@@ -11,7 +11,7 @@
 
 namespace StefGodin\NoTmpl\Engine;
 
-class NodeEnder implements EnderInterface
+class NodeEnder
 {
     /** @var callable */
     private readonly mixed $end;
