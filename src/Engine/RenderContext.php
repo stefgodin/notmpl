@@ -30,11 +30,19 @@ class RenderContext
         $this->nodeTreeBuilder = new NodeTreeBuilder();
     }
     
+    /**
+     * @return string
+     * @throws EngineException
+     */
     public function render(): string
     {
-        return $this->nodeTreeBuilder->stopCapture()->buildTree()->render();
+        return $this->nodeTreeBuilder->buildTree()->render();
     }
     
+    /**
+     * @return void
+     * @throws EngineException
+     */
     public function cleanup(): void
     {
         $this->nodeTreeBuilder->stopCapture(true);
@@ -156,7 +164,6 @@ class RenderContext
     /**
      * @param string $name
      * @return bool
-     * @throws EngineException
      */
     function hasSlot(string $name = ComponentNode::DEFAULT_SLOT): bool
     {

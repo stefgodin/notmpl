@@ -43,6 +43,10 @@ class NodeTreeBuilder
      */
     public function buildTree(): RootNode
     {
+        if($this->isCapturing()) {
+            $this->stopCapture();
+        }
+        
         if($this->currentNode !== $this->rootNode) {
             EngineException::throwInvalidTreeStructure("{$this->currentNode::getType()} node was left open");
         }
