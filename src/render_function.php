@@ -13,6 +13,10 @@ namespace StefGodin\NoTmpl;
 
 use Generator;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
+use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
+use StefGodin\NoTmpl\Engine\Node\SlotNode;
+use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
+use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use StefGodin\NoTmpl\Engine\NodeEnder;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
 
@@ -26,7 +30,15 @@ use StefGodin\NoTmpl\Engine\RenderContextStack;
  */
 function component(string $name, array $parameters = []): NodeEnder
 {
-    return RenderContextStack::current()->component($name, $parameters);
+    $ctx = RenderContextStack::current();
+    $ctx->getNodeTreeBuilder()
+        ->addNode($component = new ComponentNode())
+        ->capture(fn() => $ctx->getFileManager()->handle($name, $parameters))
+        ->exitNode($component)
+        ->addNode(new UseComponentNode($component))
+        ->startCapture();
+    
+    return new NodeEnder(component_end(...));
 }
 
 /**
@@ -37,7 +49,9 @@ function component(string $name, array $parameters = []): NodeEnder
  */
 function component_end(): void
 {
-    RenderContextStack::current()->componentEnd();
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->exitNode(UseComponentNode::getType())
+        ->startCapture();
 }
 
 /**
@@ -52,7 +66,11 @@ function component_end(): void
  */
 function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []): NodeEnder
 {
-    return RenderContextStack::current()->slot($name, $bindings);
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new SlotNode($name, $bindings))
+        ->startCapture();
+    
+    return new NodeEnder(slot_end(...));
 }
 
 /**
@@ -63,7 +81,9 @@ function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []):
  */
 function slot_end(): void
 {
-    RenderContextStack::current()->slotEnd();
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->exitNode(SlotNode::getType())
+        ->startCapture();
 }
 
 /**
@@ -80,7 +100,11 @@ function slot_end(): void
  */
 function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings = null): NodeEnder
 {
-    return RenderContextStack::current()->useSlot($name, $bindings);
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new UseSlotNode($name, $bindings))
+        ->startCapture();
+    
+    return new NodeEnder(use_slot_end(...));
 }
 
 /**
@@ -91,7 +115,9 @@ function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings =
  */
 function parent_slot(): void
 {
-    RenderContextStack::current()->parentSlot();
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new ParentSlotNode())
+        ->startCapture();
 }
 
 /**
@@ -102,7 +128,9 @@ function parent_slot(): void
  */
 function use_slot_end(): void
 {
-    RenderContextStack::current()->useSlotEnd();
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->exitNode(UseSlotNode::getType())
+        ->startCapture();
 }
 
 /**
@@ -121,7 +149,21 @@ function use_slot_end(): void
  */
 function use_repeat_slots(string $name = ComponentNode::DEFAULT_SLOT): Generator
 {
-    return RenderContextStack::current()->useRepeatSlots($name);
+    $ctx = RenderContextStack::current();
+    return (function() use ($name, $ctx): Generator {
+        $useComponent = $ctx->getNodeTreeBuilder()->getCurrentNode();
+        if(!$useComponent instanceof UseComponentNode) {
+            return;
+        }
+        
+        foreach($useComponent->getComponent()->getSlots($name) as $i => $slot) {
+            if(!$slot->isReplaced()) {
+                use_slot($name, $bindings);
+                yield $i => $bindings;
+                use_slot_end();
+            }
+        }
+    })();
 }
 
 /**
@@ -133,5 +175,10 @@ function use_repeat_slots(string $name = ComponentNode::DEFAULT_SLOT): Generator
  */
 function has_slot(string $name = ComponentNode::DEFAULT_SLOT): bool
 {
-    return RenderContextStack::current()->hasSlot($name);
+    $useComponent = RenderContextStack::current()->getNodeTreeBuilder()->getCurrentNode();
+    if(!$useComponent instanceof UseComponentNode) {
+        return false;
+    }
+    
+    return !empty(array_filter($useComponent->getComponent()->getSlots($name), fn(SlotNode $s) => !$s->isReplaced()));
 }
