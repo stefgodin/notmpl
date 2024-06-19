@@ -58,18 +58,19 @@ class NoTmpl
             $this->aliases,
             $this->autoResolvedExtensions,
             DefaultFileHandlers::merge($this->fileHandlers),
+            $this->renderGlobalParams,
         );
         
-        $renderContext = new RenderContext(
-            $fileManager,
-            $this->renderGlobalParams
-        );
+        $renderContext = new RenderContext($fileManager);
         RenderContextStack::$stack[] = $renderContext;
+        
         try {
-            $renderContext->component($file, $parameters)->end();
-            $result = $renderContext->render();
+            $result = $renderContext->getNodeTreeBuilder()
+                ->capture(fn() => $renderContext->getFileManager()->handle($file, $parameters))
+                ->buildTree()
+                ->render();
         } catch(Throwable $e) {
-            $renderContext->cleanup();
+            $renderContext->getNodeTreeBuilder()->stopCapture(true);
             array_pop(RenderContextStack::$stack);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;

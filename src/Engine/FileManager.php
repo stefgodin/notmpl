@@ -18,6 +18,7 @@ class FileManager
         private readonly array $aliases,
         private readonly array $autoResolveExtensions,
         private readonly array $handlers,
+        private readonly array $params,
     ) {}
     
     /**
@@ -50,17 +51,17 @@ class FileManager
     
     /**
      * @param string $name
-     * @param array $params
+     * @param array $localParams
      * @return void
      * @throws EngineException
      */
-    public function handle(string $name, array $params): void
+    public function handle(string $name, array $localParams): void
     {
         $file = $this->resolve($name);
         
         foreach($this->handlers as $regex => $handler) {
             if(preg_match($regex, $file)) {
-                $handler($file, $params);
+                $handler($file, array_merge($this->params, $localParams));
                 return;
             }
         }
