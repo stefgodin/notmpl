@@ -1,7 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\component;
-use function StefGodin\NoTmpl\component_end;
+
+namespace StefGodin\NoTmpl;
 
 /** @formatter:off */
 ?>

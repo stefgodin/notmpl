@@ -1,6 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\{slot, slot_end};
+namespace StefGodin\NoTmpl;
 
 $products = [
     ['id' => 1, 'name' => 'Oreo', 'price' => 25],

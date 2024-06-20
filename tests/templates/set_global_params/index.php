@@ -1,6 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\component;
+
+namespace StefGodin\NoTmpl;
 
 $test1 ??= 11;
 $test2 ??= 12;

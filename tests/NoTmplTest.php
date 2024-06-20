@@ -19,10 +19,13 @@ use StefGodin\NoTmpl\NoTmpl;
 use function PHPUnit\Framework\assertSame;
 use function StefGodin\NoTmpl\component;
 use function StefGodin\NoTmpl\component_end;
+use function StefGodin\NoTmpl\esc;
 use function StefGodin\NoTmpl\has_slot;
 use function StefGodin\NoTmpl\parent_slot;
 use function StefGodin\NoTmpl\slot;
 use function StefGodin\NoTmpl\slot_end;
+use function StefGodin\NoTmpl\text;
+use function StefGodin\NoTmpl\text_end;
 use function StefGodin\NoTmpl\use_repeat_slots;
 use function StefGodin\NoTmpl\use_slot;
 use function StefGodin\NoTmpl\use_slot_end;
@@ -156,6 +159,9 @@ class NoTmplTest extends TestCase
             'use_slot_end' => use_slot_end(...),
             'use_repeat_slots' => use_repeat_slots(...),
             'has_slot' => has_slot(...),
+            'esc' => fn() => esc(''),
+            'text' => text(...),
+            'text_end' => text_end(...),
         ];
         
         foreach($fns as $name => $fn) {
@@ -410,6 +416,19 @@ class NoTmplTest extends TestCase
             self::tmpl(__DIR__ . '/templates/empty_default_slot/expected.html'),
             self::removeWhitespace($noTmpl->render('index.php')),
         );
+    }
+    
+    /** @test */
+    public function esc_vars(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/esc_vars']);
+        
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/esc_vars/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
+        
     }
     
     private static function tmpl(string $file): string

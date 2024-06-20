@@ -1,6 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var callable $tag

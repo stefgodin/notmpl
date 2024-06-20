@@ -1,9 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\component;
-use function StefGodin\NoTmpl\component_end;
-use function StefGodin\NoTmpl\slot;
-use function StefGodin\NoTmpl\slot_end;
+namespace StefGodin\NoTmpl;
 
 /**
  * @var string $title

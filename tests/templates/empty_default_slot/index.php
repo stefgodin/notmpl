@@ -1,6 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end};
+namespace StefGodin\NoTmpl;
 
 /** @formatter:off */
 ?>

@@ -42,7 +42,7 @@ Here is a `templates/site_layout.php` representing the base layout of our applic
 Now let's say we have our first page we want to create as `templates/account.php`.
 
 ```php
-use function StefGodin\NoTmpl\{component, component_end, slot, slot_end};
+namespace StefGodin\NoTmpl; // Making it part of the engine namespace so you don't have to import functions one by one
 
 ?>
 <?php component(__DIR__.'/site_layout.php') ?>
@@ -52,7 +52,7 @@ use function StefGodin\NoTmpl\{component, component_end, slot, slot_end};
 Now we can use it in our `public/index.php` file like so
 
 ```php
-use StefGodin\NoTmpl\NoTmpl;
+namespace StefGodin\NoTmpl;
 
 $noTmpl = new NoTmpl();
 echo $noTmpl->render(__DIR__.'/../templates/account.php'); // The whole unmodified layout will echo out
@@ -63,7 +63,7 @@ echo $noTmpl->render(__DIR__.'/../templates/account.php'); // The whole unmodifi
 This is all fine but writing every complete path is quite a task. This is when directory configuration comes into play.\
 In `public/index.php`
 ```php
-use StefGodin\NoTmpl\NoTmpl;
+namespace StefGodin\NoTmpl;
 
 $noTmpl = new NoTmpl();
 $noTmpl->addDirectory(__DIR__.'/../templates'); // <--
@@ -73,7 +73,7 @@ echo $noTmpl->render('account.php'); // Already better
 
 Now in `templates/account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end};
+namespace StefGodin\NoTmpl;
 
 ?>
 <?php component('site_layout.php') ?>
@@ -83,7 +83,8 @@ use function StefGodin\NoTmpl\{component, component_end};
 As we know, `site_layout.php` will be used by a lot of pages, so we might want a shorter alias for it.\
 In `public/index.php`
 ```php
-use StefGodin\NoTmpl\NoTmpl;
+namespace StefGodin\NoTmpl;
+
 
 $noTmpl = new NoTmpl();
 $noTmpl->addDirectory(__DIR__.'/../templates')
@@ -94,8 +95,7 @@ echo $noTmpl->render('account.php');
 
 Now in `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end};
-
+namespace StefGodin\NoTmpl;
 ?>
 <?php component('layout') ?>
 <?php component_end() ?>
@@ -133,12 +133,8 @@ $title ??= 'My app title';
     </header>
 ...
 ```
-
-> Security Warning!\
-> Using variables that are not controlled by you may contain user added HTML and will make your app vulnerable to 
-> [XSS attacks](https://owasp.org/www-community/attacks/xss/). You must escape unsafe values yourself by using the 
-> available `esc_html` function or by using a well tested library such as 
-> [laminas-escaper](https://packagist.org/packages/laminas/laminas-escaper). 
+> Note: Be careful when outputting variables to the template as they are not escaped by default. Refer to the
+> [Escaping Guide](./Escaping.md) for more information on the subject.
 
 Now we may want to send the current username to `account.php`.
 In `public/index.php`
@@ -152,7 +148,7 @@ echo $noTmpl->render('account.php', [
 
 In `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -218,7 +214,7 @@ Let's say we want our account page to show some user info.
 
 First we start by declaring a slot within our `layout` component file.
 ```php
-use function StefGodin\NoTmpl\{slot, slot_end};
+namespace StefGodin\NoTmpl;
 ...
 ?>
 ...
@@ -242,7 +238,7 @@ use function StefGodin\NoTmpl\{slot, slot_end};
 
 Then we use it in `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -320,7 +316,7 @@ Let's make a slot for the footer in our `layout` component
 
 And now we can also use it in our `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -385,7 +381,7 @@ Now the link to information policy will be shown when we don't use the footer sl
 
 But now only the link for support is shown in `account.php`. Let's bring it back using the `parent_slot` function.
 ```php
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -440,7 +436,7 @@ In `layout`
 
 In `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -497,7 +493,7 @@ $dynamicClass = ['small-font', 'large-font'][random_int(0, 1)]; // Loads a rando
 
 And now use it in `account.php`
 ```php
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -556,7 +552,7 @@ We can indeed nest components into one another and combine slots for very deep a
 Let's add a `nav.php` component in `templates/` directory
 
 ```php
-use function StefGodin\NoTmpl\slot
+namespace StefGodin\NoTmpl;
 
 // Gets a class according to a specific link state (ex: active/inactive)
 $get_link_class = function(string $path): string {
@@ -580,7 +576,7 @@ $get_link_class = function(string $path): string {
 
 Now we use it in `layout` 
 ```php
-use function StefGodin\NoTmpl\{component, component_end, slot, slot_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 ...
 
@@ -610,7 +606,7 @@ $links = [
 
 And we can now also add links from `account.php` 
 ```php
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 
@@ -651,7 +647,7 @@ Let's see every file we've created one last time.
 ```php
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end, slot, slot_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var string $lang
@@ -702,7 +698,7 @@ $links = [
 ```php
 <?php
 
-use function StefGodin\NoTmpl\slot
+namespace StefGodin\NoTmpl;
 
 // Gets a class according to a specific link state (ex: active/inactive)
 $get_link_class = function(string $path): string {
@@ -728,7 +724,7 @@ $get_link_class = function(string $path): string {
 ```php
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, parent_slot};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var User $user 

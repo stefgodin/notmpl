@@ -1,5 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\use_slot;
+
+namespace StefGodin\NoTmpl;
 
 use_slot();

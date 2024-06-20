@@ -1,6 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\has_slot;
+
+namespace StefGodin\NoTmpl;
 
 /** @formatter:off */
 ?>

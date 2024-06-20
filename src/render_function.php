@@ -14,11 +14,14 @@ namespace StefGodin\NoTmpl;
 use Generator;
 use StefGodin\NoTmpl\Engine\Node\ComponentNode;
 use StefGodin\NoTmpl\Engine\Node\ParentSlotNode;
+use StefGodin\NoTmpl\Engine\Node\RawContentNode;
 use StefGodin\NoTmpl\Engine\Node\SlotNode;
+use StefGodin\NoTmpl\Engine\Node\TextNode;
 use StefGodin\NoTmpl\Engine\Node\UseComponentNode;
 use StefGodin\NoTmpl\Engine\Node\UseSlotNode;
 use StefGodin\NoTmpl\Engine\NodeEnder;
 use StefGodin\NoTmpl\Engine\RenderContextStack;
+use Stringable;
 
 /**
  * Starts a component block and loads a specific file for it.
@@ -181,4 +184,49 @@ function has_slot(string $name = ComponentNode::DEFAULT_SLOT): bool
     }
     
     return !empty(array_filter($useComponent->getComponent()->getSlots($name), fn(SlotNode $s) => !$s->isReplaced()));
+}
+
+/**
+ * Starts the context of a text tag that will escape any content for HTML output
+ *
+ * @return NodeEnder
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function text(): NodeEnder
+{
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new TextNode())
+        ->startCapture();
+    
+    return new NodeEnder(text_end(...));
+}
+
+/**
+ * Ends the last open {@see text} tag
+ *
+ * @return void
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function text_end(): void
+{
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->exitNode(TextNode::getType())
+        ->startCapture();
+}
+
+/**
+ * @param mixed $value
+ * @return void
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function esc(mixed $value): void
+{
+    if(!is_string($value) && !is_scalar($value) && !$value instanceof Stringable) {
+        $value = '';
+    }
+    
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new TextNode())
+        ->addNode(new RawContentNode($value))
+        ->exitNode(TextNode::getType());
 }

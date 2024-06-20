@@ -1,7 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\{component, component_end, esc_html, parent_slot, slot, slot_end, use_slot, use_slot_end};
-use function StefGodin\NoTmpl\{use_repeat_slots};
+
+namespace StefGodin\NoTmpl;
 
 /**
  * @var string $title
@@ -31,9 +31,9 @@ $links = [
                 Nothing to overwrite
             <?php use_slot_end() ?>
 
-            <span attr="<?= esc_html($title) ?>"><?= $title ?></span>
+            <span attr="<?php esc($title) ?>"><?= $title ?></span>
             <?php parent_slot() ?>
-            <span><?= esc_html($title.' '.gettype($binds)) ?></span>
+            <span><?php esc($title.' '.gettype($binds)) ?></span>
         <?php component_end() ?>
     </div>
 <?php slot_end() ?>
@@ -45,7 +45,7 @@ $links = [
                 FIRST!
             <?php use_slot_end() ?>
     
-            <?php foreach($it = use_repeat_slots('name') as $k => $bindings): ?>
+            <?php foreach(use_repeat_slots('name') as $k => $bindings): ?>
                 <span><?php parent_slot() ?>(<?= $bindings['product']['id'] ?>) : <?= $k ?></span>
                 <?php if($k === 2){ ?>
                     <?php use_slot_end(); break; ?>

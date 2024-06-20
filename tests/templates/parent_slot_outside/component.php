@@ -1,5 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\parent_slot;
+
+namespace StefGodin\NoTmpl;
 
 parent_slot();

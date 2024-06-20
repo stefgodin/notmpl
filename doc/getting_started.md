@@ -54,7 +54,7 @@ echo $noTmpl->render(__DIR__.'/templates/page.php');
 
 ```php
 // templates/page.php
-use function StefGodin\NoTmpl\{component, component_end}; 
+namespace StefGodin\NoTmpl;
 ?>
 <div>
     <?php component(__DIR__.'/header.php') ?>

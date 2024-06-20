@@ -8,7 +8,7 @@ Here you can read about the documentation of the NoTMPL engine.
 - [Learn by Example](./example.md)
 - [Coding Style and Best Practices Guide](./best_practices.md)
 - [Advanced Usage](./advanced.md)
-- [Security](./security.md)
+- [Escaping Guide](./escaping.md)
 - [API](./api/index.md)
 
 ## Design choices

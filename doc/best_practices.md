@@ -39,8 +39,17 @@ If a component/slot has too many parameters/bindings to be on a single line, onl
 
 ### Namespace uses
 
-The `use function` statement is required at the top of the page for every NoTMPL function. They should be grouped
-together to decrease the amount of lines used for these functions.
+Making the php file part of the `StefGodin\NoTmpl` space is the recommended way to give access to any of the engine 
+functions.
+
+```php
+<?php
+
+namespace StefGodin\NoTmpl;
+```
+
+As an alternative, use the `use function` statement at the top of the page for importing the NoTMPL functions. They 
+should be grouped together to decrease the amount of lines used for these functions.
 
 Bad
 
@@ -54,7 +63,7 @@ use function StefGodin\NoTmpl\slot_end;
 use function StefGodin\NoTmpl\use_slot;
 use function StefGodin\NoTmpl\parent_slot;
 use function StefGodin\NoTmpl\use_slot_end;
-use function StefGodin\NoTmpl\esc_html;
+use function StefGodin\NoTmpl\esc;
 ```
 
 Good
@@ -62,8 +71,9 @@ Good
 ```php
 <?php
 
-use function StefGodin\NoTmpl\{component,component_end,slot,slot_end,use_slot,parent_slot,use_slot_end,esc_html};
+use function StefGodin\NoTmpl\{component,component_end,slot,slot_end,use_slot,parent_slot,use_slot_end,esc};
 ```
+
 
 ### Indentation
 
@@ -192,8 +202,8 @@ Good
 <div attr="<?= $var ?>"><?= $var ?></div>
 ```
 
-> Note: Be careful when outputting variables to the template as they are not escaped by default. Refer the
-> [Security Guide](./security.md) for more information on the subject.
+> Note: Be careful when outputting variables to the template as they are not escaped by default. Refer to the
+> [Escaping Guide](./Escaping.md) for more information on the subject.
 
 ## Control flow statements (foreach, if, ...)
 

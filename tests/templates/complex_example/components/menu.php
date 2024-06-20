@@ -1,11 +1,10 @@
 <?php
 
+namespace StefGodin\NoTmpl;
+
 /**
  * @var array $links
  */
-
-use function StefGodin\NoTmpl\{component, component_end, slot, slot_end};
-
 /** @formatter:off */
 ?>
 <nav>

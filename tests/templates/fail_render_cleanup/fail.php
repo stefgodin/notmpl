@@ -1,6 +1,7 @@
 <?php
 
-use function StefGodin\NoTmpl\slot;
+
+namespace StefGodin\NoTmpl;
 
 slot();
-throw new RuntimeException('Fail!');
+throw new \RuntimeException('Fail!');

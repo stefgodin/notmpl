@@ -1,6 +1,6 @@
 <?php
 
-use function StefGodin\NoTmpl\use_repeat_slots;
+namespace StefGodin\NoTmpl;
 
 /** @formatter:off */
 ?>

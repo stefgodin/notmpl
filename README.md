@@ -49,7 +49,7 @@ echo $noTmpl->render('main.php', ['title' => 'My custom title']);
 ```php
 <?php // main.php
 
-use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end, esc_html as e};
+namespace StefGodin\NoTmpl;
 
 /**
  * @var string $title
@@ -57,7 +57,7 @@ use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end,
 ?>
 <?php component('page.php') ?>
     <?php use_slot('header') ?>
-        <h1><?= e($title) ?></h1>
+        <h1><?php e($title) ?></h1>
     <?php use_slot_end() ?>
     
     <div>
@@ -70,7 +70,7 @@ use function StefGodin\NoTmpl\{component, component_end, use_slot, use_slot_end,
 
 ```php
 <?php // page.php
-use function StefGodin\NoTmpl\{slot, slot_end};
+namespace StefGodin\NoTmpl;
 ?>
 <div>A header</div>
 
