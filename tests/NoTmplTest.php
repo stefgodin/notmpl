@@ -428,7 +428,18 @@ class NoTmplTest extends TestCase
             self::tmpl(__DIR__ . '/templates/esc_vars/expected.html'),
             self::removeWhitespace($noTmpl->render('index.php')),
         );
+    }
+    
+    /** @test */
+    public function output_raw(): void
+    {
+        $noTmpl = (new NoTmpl())
+            ->setDirectories([__DIR__ . '/templates/output_raw']);
         
+        self::assertSame(
+            self::tmpl(__DIR__ . '/templates/output_raw/expected.html'),
+            self::removeWhitespace($noTmpl->render('index.php')),
+        );
     }
     
     private static function tmpl(string $file): string

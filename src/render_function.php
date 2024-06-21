@@ -53,8 +53,7 @@ function component(string $name, array $parameters = []): NodeEnder
 function component_end(): void
 {
     RenderContextStack::current()->getNodeTreeBuilder()
-        ->exitNode(UseComponentNode::getType())
-        ->startCapture();
+        ->exitNode(UseComponentNode::getType());
 }
 
 /**
@@ -85,8 +84,7 @@ function slot(string $name = ComponentNode::DEFAULT_SLOT, array $bindings = []):
 function slot_end(): void
 {
     RenderContextStack::current()->getNodeTreeBuilder()
-        ->exitNode(SlotNode::getType())
-        ->startCapture();
+        ->exitNode(SlotNode::getType());
 }
 
 /**
@@ -119,8 +117,7 @@ function use_slot(string $name = ComponentNode::DEFAULT_SLOT, mixed &$bindings =
 function parent_slot(): void
 {
     RenderContextStack::current()->getNodeTreeBuilder()
-        ->addNode(new ParentSlotNode())
-        ->startCapture();
+        ->addNode(new ParentSlotNode());
 }
 
 /**
@@ -132,8 +129,7 @@ function parent_slot(): void
 function use_slot_end(): void
 {
     RenderContextStack::current()->getNodeTreeBuilder()
-        ->exitNode(UseSlotNode::getType())
-        ->startCapture();
+        ->exitNode(UseSlotNode::getType());
 }
 
 /**
@@ -210,8 +206,7 @@ function text(): NodeEnder
 function text_end(): void
 {
     RenderContextStack::current()->getNodeTreeBuilder()
-        ->exitNode(TextNode::getType())
-        ->startCapture();
+        ->exitNode(TextNode::getType());
 }
 
 /**
@@ -229,4 +224,15 @@ function esc(mixed $value): void
         ->addNode(new TextNode())
         ->addNode(new RawContentNode($value))
         ->exitNode(TextNode::getType());
+}
+
+/**
+ * @param string $text
+ * @return void
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function raw(string $text): void
+{
+    RenderContextStack::current()->getNodeTreeBuilder()
+        ->addNode(new RawContentNode($text));
 }
